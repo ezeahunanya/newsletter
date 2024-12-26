@@ -45,7 +45,7 @@ const getButtonClasses = (isLoading: boolean, isSuccess: boolean | null) =>
     "flex-none rounded-md px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500",
     {
       "cursor-not-allowed bg-indigo-300": isLoading,
-      "bg-green-400": isSuccess === true,
+      "bg-green-500": isSuccess === true,
       "bg-red-500": isSuccess === false,
       "bg-indigo-500 hover:bg-indigo-400": !isLoading && isSuccess === null,
     },
