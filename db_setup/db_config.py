@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, func
 from sqlalchemy.orm import declarative_base
+from sqlalchemy import inspect
 import boto3
 import json
 from dotenv import load_dotenv
@@ -30,8 +31,8 @@ class Subscriber(Base):
 
 if __name__ == "__main__":
     # Fetch database credentials from AWS Secrets Manager
-    secret_name = "rds!db-1a3f0fbc-037f-49dc-97eb-9e9fd5910e4d"  # Replace with your AWS Secrets Manager secret name
-    region_name = "eu-west-2"  # Replace with your AWS region
+    secret_name = os.getenv("SECRET_NAME")
+    region_name = os.getenv("REGION")
     host = os.getenv("DB_HOST")
     database = os.getenv("DB_NAME")
 
@@ -53,8 +54,18 @@ if __name__ == "__main__":
 
         # Set up the database engine
         engine = create_engine(DATABASE_URL)
-        Base.metadata.create_all(engine)  # Create the table if it doesn't exist
 
-        print("Tables have been created successfully or already exist.")
+        # Use the Inspector to check for existing tables
+        inspector = inspect(engine)
+        existing_tables = inspector.get_table_names()
+
+        if Subscriber.__tablename__ in existing_tables:
+            print(f"The table '{Subscriber.__tablename__}' already exists.")
+        else:
+            Base.metadata.create_all(engine)  # Create the table if it doesn't exist
+            print(
+                f"The table '{Subscriber.__tablename__}' has been created successfully."
+            )
+
     except Exception as e:
         print(f"Error fetching database credentials or setting up the database: {e}")
