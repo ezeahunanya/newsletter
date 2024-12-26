@@ -46,7 +46,7 @@ const getButtonClasses = (isLoading: boolean, isSuccess: boolean | null) =>
     {
       "cursor-not-allowed bg-indigo-300": isLoading,
       "bg-green-400": isSuccess === true,
-      "bg-red-400": isSuccess === false,
+      "bg-red-500": isSuccess === false,
       "bg-indigo-500 hover:bg-indigo-400": !isLoading && isSuccess === null,
     },
   );
