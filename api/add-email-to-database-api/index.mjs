@@ -87,7 +87,7 @@ const handler = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: "Successfully subscribed",
+        message: "Email subscribed",
         id: res.rows[0].id,
       }),
     };
@@ -120,7 +120,7 @@ const handler = async (event) => {
         return {
           statusCode: 200,
           body: JSON.stringify({
-            message: "Email successfully subscribed",
+            message: "Email subscribed",
             id: res.rows[0].id,
           }),
         };
