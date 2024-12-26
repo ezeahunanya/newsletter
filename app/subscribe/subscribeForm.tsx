@@ -1,33 +1,45 @@
 "use client";
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
+
+type FormValues = {
+  email: string;
+};
+
+if (
+  process.env.NODE_ENV === "development" &&
+  !process.env.NEXT_PUBLIC_API_URL
+) {
+  console.warn(
+    "API URL is not defined. Please check your environment configuration.",
+  );
+}
 
 export default function SubscribeForm() {
-  const [error, setError] = useState<string | null>(null);
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
+  const [responseMessage, setResponseMessage] = useState("");
 
-  const validateEmail = (email: string) => {
-    const emailRegex =
-      /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return emailRegex.test(email);
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<FormValues>({
+    mode: "onChange", // Validate on each change
+  });
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-
-    setError(null); // Clear any previous error
+  const onSubmit = async (data: FormValues) => {
+    setIsLoading(true);
+    setIsSuccess(null);
+    setResponseMessage("");
 
     // Check if apiUrl is defined
     if (!apiUrl) {
-      setError(
+      console.log(
         "API URL is not defined. Please check your environment configuration.",
       );
       return;
@@ -39,35 +51,56 @@ export default function SubscribeForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: data.email }),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (response.ok) {
         // Handle successful subscription
-        console.log("Subscription successful:", data);
+        setIsSuccess(true);
+        setResponseMessage(responseData.message);
       } else {
         // Handle error
-        setError(data.error || "Unknown error");
+        setIsSuccess(false);
+        setResponseMessage(
+          responseData.error || "Failed to subscribe. Please try again.",
+        );
       }
     } catch (error) {
-      setError("An error occurred. Please try again later.");
       console.error("Error:", error);
+      setIsSuccess(false);
+      setResponseMessage("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+      // Reset state after 5 seconds
+      setTimeout(() => {
+        setIsSuccess(null);
+        setResponseMessage("");
+      }, 5000);
     }
   };
 
   return (
     <div className="min-w-0 flex-auto text-base">
-      <form onSubmit={handleSubmit} className="mt-6 flex max-w-md gap-x-4">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="mt-6 flex max-w-md gap-x-4"
+      >
         <label htmlFor="email-address" className="sr-only">
           Email address
         </label>
         <input
           id="email-address"
-          name="email"
+          {...register("email", {
+            required: "Email address is required",
+            pattern: {
+              value:
+                /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+              message: "Please enter a valid email address",
+            },
+          })}
           type="email"
-          required
           placeholder="Enter your email"
           autoComplete="email"
           className="min-w-0 flex-auto rounded-md bg-white/5 px-3.5 py-2 text-base text-white outline outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
@@ -75,12 +108,61 @@ export default function SubscribeForm() {
 
         <button
           type="submit"
-          className="flex-none rounded-md bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+          disabled={!isValid || isLoading}
+          className={`flex-none rounded-md px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm ${
+            isLoading
+              ? "cursor-not-allowed bg-indigo-300"
+              : isSuccess === true
+                ? "bg-green-400"
+                : isSuccess === false
+                  ? "bg-red-400"
+                  : "bg-indigo-500 hover:bg-indigo-400"
+          } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500`}
         >
-          Subscribe
+          {isLoading ? (
+            <svg
+              className="h-5 w-5 animate-spin text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              ></path>
+            </svg>
+          ) : isSuccess === true ? (
+            <CheckCircleIcon className="h-5 w-5 text-white" />
+          ) : isSuccess === false ? (
+            <XCircleIcon className="h-5 w-5 text-white" />
+          ) : (
+            "Subscribe"
+          )}
         </button>
       </form>
-      {error && <p className="pt-2 text-sm text-red-500">{error}</p>}
+
+      {(errors.email || responseMessage) && (
+        <p
+          className={`pt-2 text-sm ${
+            errors.email
+              ? "text-red-500"
+              : isSuccess === true
+                ? "text-green-500"
+                : "text-red-500"
+          }`}
+        >
+          {errors.email?.message || responseMessage}
+        </p>
+      )}
     </div>
   );
 }
