@@ -13,10 +13,9 @@ load_dotenv()
 Base = declarative_base()
 
 
-# Define the Subscribers table schema
+# Define a generic Subscriber model
 class Subscriber(Base):
-    __tablename__ = "subscribers"
-
+    __tablename__ = "placeholder"  # Placeholder, will be overwritten dynamically
     id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String(255), nullable=False, unique=True)
     first_name = Column(String(100), nullable=True)
@@ -27,6 +26,18 @@ class Subscriber(Base):
     last_email_opened = Column(DateTime, nullable=True)
     number_of_emails_sent = Column(Integer, default=0, nullable=False)
     number_of_emails_opened = Column(Integer, default=0, nullable=False)
+
+
+def create_table(table_name: str, engine):
+    """
+    Dynamically create a table with the specified name using the Subscriber model.
+    """
+    # Temporarily override the table name
+    Subscriber.__tablename__ = table_name
+    Base.metadata.clear()  # Clear metadata to ensure the new table name is registered
+    Base.metadata.create_all(engine, tables=[Subscriber.__table__])
+
+    print(f"The table '{table_name}' has been created successfully.")
 
 
 if __name__ == "__main__":
@@ -59,13 +70,17 @@ if __name__ == "__main__":
         inspector = inspect(engine)
         existing_tables = inspector.get_table_names()
 
-        if Subscriber.__tablename__ in existing_tables:
-            print(f"The table '{Subscriber.__tablename__}' already exists.")
+        # Create dev table if it doesn't exist
+        if "subscribers_dev" not in existing_tables:
+            create_table("subscribers_dev", engine)
         else:
-            Base.metadata.create_all(engine)  # Create the table if it doesn't exist
-            print(
-                f"The table '{Subscriber.__tablename__}' has been created successfully."
-            )
+            print("The table 'subscribers_dev' already exists.")
+
+        # Create prod table if it doesn't exist
+        if "subscribers_prod" not in existing_tables:
+            create_table("subscribers_prod", engine)
+        else:
+            print("The table 'subscribers_prod' already exists.")
 
     except Exception as e:
         print(f"Error fetching database credentials or setting up the database: {e}")
