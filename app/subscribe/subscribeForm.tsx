@@ -4,6 +4,7 @@ import { useState } from "react";
 
 export default function SubscribeForm() {
   const [error, setError] = useState<string | null>(null);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const validateEmail = (email: string) => {
     const emailRegex =
@@ -24,7 +25,36 @@ export default function SubscribeForm() {
 
     setError(null); // Clear any previous error
 
-    console.log("Form data submitted:", email);
+    // Check if apiUrl is defined
+    if (!apiUrl) {
+      setError(
+        "API URL is not defined. Please check your environment configuration.",
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Handle successful subscription
+        console.log("Subscription successful:", data);
+      } else {
+        // Handle error
+        setError(data.error || "Unknown error");
+      }
+    } catch (error) {
+      setError("An error occurred. Please try again later.");
+      console.error("Error:", error);
+    }
   };
 
   return (
