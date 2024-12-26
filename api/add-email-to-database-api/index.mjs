@@ -6,8 +6,26 @@ import pg from "pg";
 
 const { Client } = pg;
 
+let cachedDbCredentials = null;
+
+const getDbCredentials = async () => {
+  // If credentials are cached, return them
+  if (cachedDbCredentials) return cachedDbCredentials;
+
+  // Otherwise, fetch from Secrets Manager
+  const secretsClient = new SecretsManagerClient({
+    region: process.env.AWS_REGIO,
+  });
+  const command = new GetSecretValueCommand({
+    SecretId: process.env.DB_SECRET_ARN,
+  });
+  const secret = await secretsClient.send(command);
+  cachedDbCredentials = JSON.parse(secret.SecretString);
+
+  return cachedDbCredentials;
+};
+
 const handler = async (event) => {
-  // Parse the body of the request
   const body = JSON.parse(event.body);
   const { email } = body;
 
@@ -24,21 +42,15 @@ const handler = async (event) => {
       body: JSON.stringify({ error: "Invalid email format" }),
     };
   }
-  const { DB_SECRET_ARN } = process.env;
 
+  const { DB_HOST, DB_NAME, DB_PORT } = process.env;
+
+  // Fetch database credentials (cached or fresh)
   let dbCredentials;
-
   try {
-    // Fetch database credentials from AWS Secrets Manager
-    const secretsClient = new SecretsManagerClient({
-      region: process.env.AWS_REGIO,
-    });
-    const command = new GetSecretValueCommand({ SecretId: DB_SECRET_ARN });
-    const secret = await secretsClient.send(command);
-
-    dbCredentials = JSON.parse(secret.SecretString);
+    dbCredentials = await getDbCredentials();
   } catch (error) {
-    console.error("Error retrieving secrets:", error);
+    console.error("Error retrieving credentials:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({
@@ -48,8 +60,6 @@ const handler = async (event) => {
   }
 
   const { username, password } = dbCredentials;
-
-  const { DB_HOST, DB_NAME, DB_PORT } = process.env;
 
   const client = new Client({
     host: DB_HOST,
@@ -63,7 +73,7 @@ const handler = async (event) => {
   });
 
   try {
-    // Connect to the database
+    // Attempt to connect to the database
     await client.connect();
 
     const query = `
@@ -83,14 +93,52 @@ const handler = async (event) => {
     };
   } catch (error) {
     if (error.code === "23505") {
-      // Duplicate entry error
       return {
         statusCode: 409,
         body: JSON.stringify({ error: "Email already subscribed" }),
       };
     }
 
-    console.error("Error occurred:", error);
+    if (error.code === "28P01") {
+      // This is the error code for authentication failure
+      console.error("Authentication failed, refreshing credentials", error);
+
+      // Invalidate cached credentials and retry
+      cachedDbCredentials = null; // Invalidate cache
+      try {
+        dbCredentials = await getDbCredentials(); // Fetch new credentials
+        await client.connect(); // Retry the connection
+
+        const query = `
+          INSERT INTO subscribers (email, subscribed_at, email_verified, number_of_emails_sent, number_of_emails_opened)
+          VALUES ($1, NOW(), $2, $3, $4) RETURNING id;
+        `;
+        const values = [email, false, 0, 0];
+
+        const res = await client.query(query, values);
+
+        return {
+          statusCode: 200,
+          body: JSON.stringify({
+            message: "Successfully subscribed",
+            id: res.rows[0].id,
+          }),
+        };
+      } catch (refreshError) {
+        console.error(
+          "Failed to reconnect with new credentials:",
+          refreshError,
+        );
+        return {
+          statusCode: 500,
+          body: JSON.stringify({
+            error: "Failed to authenticate with new credentials",
+          }),
+        };
+      }
+    }
+
+    console.error("Database error:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Internal server error" }),
