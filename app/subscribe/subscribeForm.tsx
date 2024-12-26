@@ -1,23 +1,55 @@
 "use client";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import clsx from "clsx";
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL as string;
+
+if (!apiUrl) {
+  throw new Error(
+    "API URL is not defined. Please check your environment configuration.",
+  );
+}
 
 type FormValues = {
   email: string;
 };
 
-if (
-  process.env.NODE_ENV === "development" &&
-  !process.env.NEXT_PUBLIC_API_URL
-) {
-  console.warn(
-    "API URL is not defined. Please check your environment configuration.",
+const LoadingSpinner = () => (
+  <svg
+    className="h-5 w-5 animate-spin text-white"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    ></circle>
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+    ></path>
+  </svg>
+);
+
+const getButtonClasses = (isLoading: boolean, isSuccess: boolean | null) =>
+  clsx(
+    "flex-none rounded-md px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500",
+    {
+      "cursor-not-allowed bg-indigo-300": isLoading,
+      "bg-green-400": isSuccess === true,
+      "bg-red-400": isSuccess === false,
+      "bg-indigo-500 hover:bg-indigo-400": !isLoading && isSuccess === null,
+    },
   );
-}
 
 export default function SubscribeForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,18 +64,16 @@ export default function SubscribeForm() {
     mode: "onChange", // Validate on each change
   });
 
+  const responseMessageStyle = useMemo(() => {
+    if (errors.email) return "text-red-500";
+    if (isSuccess === true) return "text-green-500";
+    return "text-red-500";
+  }, [errors.email, isSuccess]);
+
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     setIsSuccess(null);
     setResponseMessage("");
-
-    // Check if apiUrl is defined
-    if (!apiUrl) {
-      console.log(
-        "API URL is not defined. Please check your environment configuration.",
-      );
-      return;
-    }
 
     try {
       const response = await fetch(apiUrl, {
@@ -57,11 +87,9 @@ export default function SubscribeForm() {
       const responseData = await response.json();
 
       if (response.ok) {
-        // Handle successful subscription
         setIsSuccess(true);
         setResponseMessage(responseData.message);
       } else {
-        // Handle error
         setIsSuccess(false);
         setResponseMessage(
           responseData.error || "Failed to subscribe. Please try again.",
@@ -73,7 +101,6 @@ export default function SubscribeForm() {
       setResponseMessage("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
-      // Reset state after 5 seconds
       setTimeout(() => {
         setIsSuccess(null);
         setResponseMessage("");
@@ -109,37 +136,10 @@ export default function SubscribeForm() {
         <button
           type="submit"
           disabled={!isValid || isLoading}
-          className={`flex-none rounded-md px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm ${
-            isLoading
-              ? "cursor-not-allowed bg-indigo-300"
-              : isSuccess === true
-                ? "bg-green-400"
-                : isSuccess === false
-                  ? "bg-red-400"
-                  : "bg-indigo-500 hover:bg-indigo-400"
-          } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500`}
+          className={getButtonClasses(isLoading, isSuccess)}
         >
           {isLoading ? (
-            <svg
-              className="h-5 w-5 animate-spin text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-              ></path>
-            </svg>
+            <LoadingSpinner />
           ) : isSuccess === true ? (
             <CheckCircleIcon className="h-5 w-5 text-white" />
           ) : isSuccess === false ? (
@@ -151,15 +151,7 @@ export default function SubscribeForm() {
       </form>
 
       {(errors.email || responseMessage) && (
-        <p
-          className={`pt-2 text-sm ${
-            errors.email
-              ? "text-red-500"
-              : isSuccess === true
-                ? "text-green-500"
-                : "text-red-500"
-          }`}
-        >
+        <p className={`pt-2 text-sm ${responseMessageStyle}`}>
           {errors.email?.message || responseMessage}
         </p>
       )}
