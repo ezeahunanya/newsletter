@@ -14,7 +14,7 @@ const getDbCredentials = async () => {
 
   // Otherwise, fetch from Secrets Manager
   const secretsClient = new SecretsManagerClient({
-    region: process.env.AWS_REGIO,
+    region: process.env.AWS_REGION,
   });
   const command = new GetSecretValueCommand({
     SecretId: process.env.DB_SECRET_ARN,
@@ -25,7 +25,7 @@ const getDbCredentials = async () => {
   return cachedDbCredentials;
 };
 
-const handler = async (event) => {
+export const handler = async (event) => {
   const body = JSON.parse(event.body);
   const { email } = body;
 
@@ -43,7 +43,18 @@ const handler = async (event) => {
     };
   }
 
-  const { DB_HOST, DB_NAME, DB_PORT } = process.env;
+  const {
+    DB_HOST,
+    DB_NAME,
+    TABLE_NAME_DEV,
+    TABLE_NAME_PROD,
+    DB_PORT,
+    APP_STAGE,
+  } = process.env;
+
+  // Determine the correct table name based on the environment
+  const tableName =
+    APP_STAGE === "production" ? TABLE_NAME_PROD : TABLE_NAME_DEV;
 
   // Fetch database credentials (cached or fresh)
   let dbCredentials;
@@ -77,7 +88,7 @@ const handler = async (event) => {
     await client.connect();
 
     const query = `
-      INSERT INTO subscribers (email, subscribed_at, email_verified, number_of_emails_sent, number_of_emails_opened)
+      INSERT INTO ${tableName} (email, subscribed_at, email_verified, number_of_emails_sent, number_of_emails_opened)
       VALUES ($1, NOW(), $2, $3, $4) RETURNING id;
     `;
     const values = [email, false, 0, 0];
@@ -154,6 +165,3 @@ function validateEmail(email) {
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return emailRegex.test(email);
 }
-
-// Export the handler using ES module syntax
-export default handler;
