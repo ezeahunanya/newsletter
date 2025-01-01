@@ -9,7 +9,7 @@ const { Client } = pg;
 let cachedDbCredentials = null;
 
 const getDbCredentials = async () => {
-  // If credentials are cached, return them
+  // Return cached credentials if available
   if (cachedDbCredentials) return cachedDbCredentials;
 
   // Otherwise, fetch from Secrets Manager
@@ -19,10 +19,15 @@ const getDbCredentials = async () => {
   const command = new GetSecretValueCommand({
     SecretId: process.env.DB_SECRET_ARN,
   });
-  const secret = await secretsClient.send(command);
-  cachedDbCredentials = JSON.parse(secret.SecretString);
 
-  return cachedDbCredentials;
+  try {
+    const secret = await secretsClient.send(command);
+    cachedDbCredentials = JSON.parse(secret.SecretString);
+    return cachedDbCredentials;
+  } catch (error) {
+    console.error("Failed to retrieve credentials:", error);
+    throw new Error("Failed to retrieve database credentials");
+  }
 };
 
 export const handler = async (event) => {
@@ -52,12 +57,11 @@ export const handler = async (event) => {
     APP_STAGE,
   } = process.env;
 
-  // Determine the correct table name based on the environment
   const tableName =
     APP_STAGE === "production" ? TABLE_NAME_PROD : TABLE_NAME_DEV;
 
-  // Fetch database credentials (cached or fresh)
   let dbCredentials;
+
   try {
     dbCredentials = await getDbCredentials();
   } catch (error) {
@@ -71,20 +75,18 @@ export const handler = async (event) => {
   }
 
   const { username, password } = dbCredentials;
-
   const client = new Client({
     host: DB_HOST,
     database: DB_NAME,
     port: parseInt(DB_PORT, 10),
     user: username,
     password: password,
-    ssl: {
-      rejectUnauthorized: false, // Use this for RDS
-    },
+    ssl: { rejectUnauthorized: false },
   });
 
+  let newClient; // Will hold the new client for reconnecting if needed
+
   try {
-    // Attempt to connect to the database
     await client.connect();
 
     const query = `
@@ -92,7 +94,6 @@ export const handler = async (event) => {
       VALUES ($1, NOW(), $2, $3, $4) RETURNING id;
     `;
     const values = [email, false, 0, 0];
-
     const res = await client.query(query, values);
 
     return {
@@ -111,22 +112,31 @@ export const handler = async (event) => {
     }
 
     if (error.code === "28P01") {
-      // This is the error code for authentication failure
       console.error("Authentication failed, refreshing credentials", error);
 
-      // Invalidate cached credentials and retry
-      cachedDbCredentials = null; // Invalidate cache
+      // Clear cached credentials and close the current client
+      cachedDbCredentials = null;
+      await client.end();
+
       try {
-        dbCredentials = await getDbCredentials(); // Fetch new credentials
-        await client.connect(); // Retry the connection
+        dbCredentials = await getDbCredentials(); // Re-fetch the new credentials
+        newClient = new Client({
+          host: DB_HOST,
+          database: DB_NAME,
+          port: parseInt(DB_PORT, 10),
+          user: dbCredentials.username,
+          password: dbCredentials.password,
+          ssl: { rejectUnauthorized: false },
+        });
+
+        await newClient.connect();
 
         const query = `
-          INSERT INTO subscribers (email, subscribed_at, email_verified, number_of_emails_sent, number_of_emails_opened)
+          INSERT INTO ${tableName} (email, subscribed_at, email_verified, number_of_emails_sent, number_of_emails_opened)
           VALUES ($1, NOW(), $2, $3, $4) RETURNING id;
         `;
         const values = [email, false, 0, 0];
-
-        const res = await client.query(query, values);
+        const res = await newClient.query(query, values);
 
         return {
           statusCode: 200,
@@ -136,6 +146,12 @@ export const handler = async (event) => {
           }),
         };
       } catch (refreshError) {
+        if (error.code === "23505") {
+          return {
+            statusCode: 409,
+            body: JSON.stringify({ error: "Email already subscribed" }),
+          };
+        }
         console.error(
           "Failed to reconnect with new credentials:",
           refreshError,
@@ -155,7 +171,14 @@ export const handler = async (event) => {
       body: JSON.stringify({ error: "Internal server error" }),
     };
   } finally {
-    await client.end();
+    // Clean up both clients (old and new)
+    if (client && client._connected) {
+      await client.end();
+    }
+
+    if (newClient && newClient._connected) {
+      await newClient.end();
+    }
   }
 };
 
