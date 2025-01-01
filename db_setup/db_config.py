@@ -1,3 +1,4 @@
+import argparse
 from sqlalchemy import (
     create_engine,
     Column,
@@ -53,18 +54,26 @@ def prompt_user(question: str) -> bool:
             print("Invalid input. Please enter 'y' or 'n'.")
 
 
-# Create or overwrite table
-def handle_table(table_name, engine, metadata):
+# Handle the creation or overwriting of a table
+def handle_table(table_name, engine, metadata, is_prod=False, overwrite=False):
     table = define_table(table_name, metadata)
     inspector = inspect(engine)
 
     # Check if the table exists
     existing_tables = inspector.get_table_names(schema="public")
     if table_name in existing_tables:
-        overwrite = prompt_user(
-            f"The table '{table_name}' already exists. Do you want to overwrite it?"
-        )
-        if overwrite:
+        if is_prod:
+            # Additional caution for the 'prod' table
+            if not overwrite:
+                print(
+                    f"Skipping overwrite of the production table '{table_name}'. Use '--overwrite' to force overwrite."
+                )
+                return
+            overwrite = prompt_user(
+                f"WARNING: The table '{table_name}' is a production table with real data. Are you sure you want to overwrite it?"
+            )
+
+        if not is_prod or overwrite:
             try:
                 table.drop(engine)  # Drop the table
                 print(f"The table '{table_name}' has been dropped.")
@@ -84,6 +93,15 @@ def handle_table(table_name, engine, metadata):
 
 # Main execution
 if __name__ == "__main__":
+    # Parse arguments
+    parser = argparse.ArgumentParser(description="Set up the database tables.")
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Allow overwriting production table (use with caution).",
+    )
+    args = parser.parse_args()
+
     # Fetch database credentials from AWS Secrets Manager
     secret_name = os.getenv("SECRET_NAME")
     region_name = os.getenv("REGION")
@@ -111,11 +129,13 @@ if __name__ == "__main__":
         engine = create_engine(DATABASE_URL)
         metadata = MetaData()  # Initialize metadata object
 
-        # Handle the 'subscribers_dev' table
+        # Handle the 'subscribers_dev' table (non-prod)
         handle_table("subscribers_dev", engine, metadata)
 
-        # Handle the 'subscribers_prod' table
-        handle_table("subscribers_prod", engine, metadata)
+        # Handle the 'subscribers_prod' table (prod, with extra caution if no --overwrite)
+        handle_table(
+            "subscribers_prod", engine, metadata, is_prod=True, overwrite=args.overwrite
+        )
 
     except Exception as e:
         print(f"Error fetching database credentials or setting up the database: {e}")
