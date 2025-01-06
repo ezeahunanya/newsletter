@@ -35,10 +35,6 @@ def define_table(name, metadata):
         Column("last_name", String(100), nullable=True),
         Column("subscribed_at", DateTime, default=func.now(), nullable=False),
         Column("email_verified", Boolean, default=False, nullable=False),
-        Column("last_email_sent", DateTime, nullable=True),
-        Column("last_email_opened", DateTime, nullable=True),
-        Column("number_of_emails_sent", Integer, default=0, nullable=False),
-        Column("number_of_emails_opened", Integer, default=0, nullable=False),
     )
 
 
