@@ -42,7 +42,7 @@ def define_subscribers_table(name, metadata, **kwargs):
 
 
 # Define token table
-def define_token_table(name, metadata, subscriber_table_name=None, **kwargs):
+def define_tokens_table(name, metadata, subscriber_table_name=None, **kwargs):
     return Table(
         name,
         metadata,
@@ -141,16 +141,16 @@ if __name__ == "__main__":
         metadata = MetaData()  # Initialize metadata object
 
         # Handle dev tables (always drop and recreate)
-        drop_table_if_exists("token_dev", engine, metadata)
+        drop_table_if_exists("tokens_dev", engine, metadata)
         drop_table_if_exists("subscribers_dev", engine, metadata)
         create_table_if_not_exists(
             "subscribers_dev", engine, metadata, define_subscribers_table
         )
         create_table_if_not_exists(
-            "token_dev",
+            "tokens_dev",
             engine,
             metadata,
-            define_token_table,
+            define_tokens_table,
             subscriber_table_name="subscribers_dev",
         )
 
@@ -158,18 +158,18 @@ if __name__ == "__main__":
         if args.overwrite:
             # Prompt before dropping and recreating production tables
             if prompt_user(
-                "WARNING: Do you want to drop the production tables ('subscribers_prod' and 'token_prod')? This will remove all data!"
+                "WARNING: Do you want to drop the production tables ('subscribers_prod' and 'tokens_prod')? This will remove all data!"
             ):
-                drop_table_if_exists("token_prod", engine, metadata)
+                drop_table_if_exists("tokens_prod", engine, metadata)
                 drop_table_if_exists("subscribers_prod", engine, metadata)
                 create_table_if_not_exists(
                     "subscribers_prod", engine, metadata, define_subscribers_table
                 )
                 create_table_if_not_exists(
-                    "token_prod",
+                    "tokens_prod",
                     engine,
                     metadata,
-                    define_token_table,
+                    define_tokens_table,
                     subscriber_table_name="subscribers_prod",
                 )
             else:
@@ -180,10 +180,10 @@ if __name__ == "__main__":
                 "subscribers_prod", engine, metadata, define_subscribers_table
             )
             create_table_if_not_exists(
-                "token_prod",
+                "tokens_prod",
                 engine,
                 metadata,
-                define_token_table,
+                define_tokens_table,
                 subscriber_table_name="subscribers_prod",
             )
 
