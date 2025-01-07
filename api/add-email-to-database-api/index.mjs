@@ -63,7 +63,7 @@ const validateEmail = (email) => {
 
 const defaultPreferences = {
   updates: true, // User agrees to updates by default
-  promotions: false, // User opts out of promotions by default
+  promotions: true, // User opts out of promotions by default
 };
 
 // Insert email into the database
