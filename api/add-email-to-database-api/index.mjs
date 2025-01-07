@@ -2,6 +2,8 @@ import {
   SecretsManagerClient,
   GetSecretValueCommand,
 } from "@aws-sdk/client-secrets-manager";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import crypto from "crypto";
 import pg from "pg";
 
 const { Client } = pg;
@@ -59,13 +61,18 @@ const validateEmail = (email) => {
   return emailRegex.test(email);
 };
 
+const defaultPreferences = {
+  updates: true, // User agrees to updates by default
+  promotions: false, // User opts out of promotions by default
+};
+
 // Insert email into the database
 const insertEmail = async (client, tableName, email) => {
   const query = `
-    INSERT INTO ${tableName} (email, subscribed_at, email_verified, number_of_emails_sent, number_of_emails_opened)
-    VALUES ($1, NOW(), $2, $3, $4) RETURNING id;
+    INSERT INTO ${tableName} (email, subscribed, subscribed_at, email_verified, preferences)
+    VALUES ($1, $2, NOW(), $3, $4) RETURNING id;
   `;
-  const values = [email, false, 0, 0];
+  const values = [email, true, false, JSON.stringify(defaultPreferences)];
 
   try {
     const res = await client.query(query, values);
@@ -75,6 +82,73 @@ const insertEmail = async (client, tableName, email) => {
       throw new Error("Email already subscribed");
     }
     throw error;
+  }
+};
+
+// Insert token into the token table
+const insertToken = async (
+  client,
+  tableName,
+  userId,
+  tokenHash,
+  tokenType,
+  expiresAt,
+) => {
+  const query = `
+    INSERT INTO ${tableName} (user_id, token_hash, token_type, expires_at, used, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5, NOW(), NOW());
+  `;
+  const values = [userId, tokenHash, tokenType, expiresAt, false];
+
+  try {
+    await client.query(query, values);
+  } catch (error) {
+    console.error("Error inserting token:", error);
+    throw error;
+  }
+};
+
+// Send opt-in email using SES
+const sendOptInEmail = async (email, token) => {
+  const sesClient = new SESClient({ region: process.env.AWS_REGION });
+
+  const emailParams = {
+    Destination: {
+      ToAddresses: [email],
+    },
+    Message: {
+      Body: {
+        Html: {
+          Data: `
+            <html>
+              <head>
+                <title>Email Verification</title>
+              </head>
+              <body>
+                <p>Hey,</p>
+                <p>Thank you for subscribing! Please verify your email address by clicking the link below:</p>
+                <p><a href="${process.env.APP_URL}/verify-email?token=${token}">Verify your email</a></p>
+                <p>Please note that if you do not verify your email, you will not receive any further communications from me.</p>
+                <p>Thanks,</p>
+                <p>Eze</p>
+              </body>
+            </html>
+          `,
+        },
+      },
+      Subject: {
+        Data: "Please verify your email address",
+      },
+    },
+    Source: process.env.SES_SOURCE_EMAIL,
+  };
+
+  try {
+    const command = new SendEmailCommand(emailParams);
+    await sesClient.send(command);
+    console.log("Verification email sent successfully");
+  } catch (error) {
+    console.error("Error sending verification email:", error);
   }
 };
 
@@ -96,9 +170,17 @@ export const handler = async (event) => {
     };
   }
 
-  const { TABLE_NAME_DEV, TABLE_NAME_PROD, APP_STAGE } = process.env;
-  const tableName =
+  const {
+    TABLE_NAME_DEV,
+    TABLE_NAME_PROD,
+    TOKEN_TABLE_DEV,
+    TOKEN_TABLE_PROD,
+    APP_STAGE,
+  } = process.env;
+  const subscriberTableName =
     APP_STAGE === "production" ? TABLE_NAME_PROD : TABLE_NAME_DEV;
+  const tokenTableName =
+    APP_STAGE === "production" ? TOKEN_TABLE_PROD : TOKEN_TABLE_DEV;
 
   let dbCredentials;
   let client;
@@ -109,11 +191,32 @@ export const handler = async (event) => {
     client = await connectToDatabase(dbCredentials);
 
     // Insert email into the database
-    const id = await insertEmail(client, tableName, email);
+    const userId = await insertEmail(client, subscriberTableName, email);
+
+    // Generate and store the token
+    const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const tokenType = "email_verification";
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24-hour expiry
+
+    await insertToken(
+      client,
+      tokenTableName,
+      userId,
+      tokenHash,
+      tokenType,
+      expiresAt,
+    );
+
+    // Send opt-in email with the token
+    const verificationUrl = `${process.env.VERIFICATION_URL}/verify-email?token=${token}`;
+    await sendOptInEmail(email, verificationUrl);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Email subscribed", id }),
+      body: JSON.stringify({
+        message: "Email subscribed. Please verify your email.",
+      }),
     };
   } catch (error) {
     console.error("Error processing request:", error);
@@ -123,24 +226,6 @@ export const handler = async (event) => {
         statusCode: 409,
         body: JSON.stringify({ error: "Email already subscribed" }),
       };
-    }
-
-    if (error.message === "Database connection failed") {
-      // Retry on authentication failure
-      try {
-        cachedDbCredentials = null; // Clear cached credentials
-        dbCredentials = await getDbCredentials();
-        client = await connectToDatabase(dbCredentials);
-
-        // Retry inserting the email
-        const id = await insertEmail(client, tableName, email);
-        return {
-          statusCode: 200,
-          body: JSON.stringify({ message: "Email subscribed", id }),
-        };
-      } catch (retryError) {
-        console.error("Retry failed:", retryError);
-      }
     }
 
     return {
