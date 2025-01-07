@@ -6,6 +6,7 @@ from sqlalchemy import (
     String,
     Boolean,
     DateTime,
+    ForeignKey,
     func,
     Table,
     MetaData,
@@ -24,8 +25,8 @@ load_dotenv()
 Base = declarative_base()
 
 
-# Define table schema as a helper function to handle dynamic table names
-def define_table(name, metadata):
+# Define subscribers table
+def define_subscribers_table(name, metadata):
     return Table(
         name,
         metadata,
@@ -33,8 +34,40 @@ def define_table(name, metadata):
         Column("email", String(255), nullable=False, unique=True),
         Column("first_name", String(100), nullable=True),
         Column("last_name", String(100), nullable=True),
+        Column(
+            "subscribed", Boolean, default=True, nullable=False
+        ),  # Subscription status
         Column("subscribed_at", DateTime, default=func.now(), nullable=False),
+        Column(
+            "unsubscribed_at", DateTime, nullable=True
+        ),  # Tracks unsubscribe timestamp
         Column("email_verified", Boolean, default=False, nullable=False),
+        Column(
+            "preferences", String(255), nullable=True
+        ),  # JSON-encoded string for email preferences
+    )
+
+
+# Define token table
+def define_token_table(name, metadata, subscriber_table_name):
+    return Table(
+        name,
+        metadata,
+        Column("id", Integer, primary_key=True, autoincrement=True),
+        Column(
+            "user_id",
+            Integer,
+            ForeignKey(f"{subscriber_table_name}.id"),
+            nullable=False,
+        ),  # Links to the correct main table dynamically
+        Column("token_hash", String(255), nullable=False),
+        Column(
+            "token_type", String(50), nullable=False
+        ),  # Type of token (e.g., email_verification, unsubscribe, etc.)
+        Column("expires_at", DateTime, nullable=False),
+        Column("used", Boolean, default=False),  # Tracks if the token has been used
+        Column("created_at", DateTime, default=func.now(), nullable=False),
+        Column("updated_at", DateTime, default=func.now(), nullable=False),
     )
 
 
@@ -51,8 +84,10 @@ def prompt_user(question: str) -> bool:
 
 
 # Handle the creation or overwriting of a table
-def handle_table(table_name, engine, metadata, is_prod=False, overwrite=False):
-    table = define_table(table_name, metadata)
+def handle_table(
+    table_name, engine, metadata, table_def, is_prod=False, overwrite=False, **kwargs
+):
+    table = table_def(table_name, metadata, **kwargs)
     inspector = inspect(engine)
 
     # Check if the table exists
@@ -126,11 +161,36 @@ if __name__ == "__main__":
         metadata = MetaData()  # Initialize metadata object
 
         # Handle the 'subscribers_dev' table (non-prod)
-        handle_table("subscribers_dev", engine, metadata)
+        handle_table("subscribers_dev", engine, metadata, define_subscribers_table)
+
+        # Handle the 'token_dev' table
+        handle_table(
+            "token_dev",
+            engine,
+            metadata,
+            define_token_table,
+            subscriber_table_name="subscribers_dev",
+        )
 
         # Handle the 'subscribers_prod' table (prod, with extra caution if no --overwrite)
         handle_table(
-            "subscribers_prod", engine, metadata, is_prod=True, overwrite=args.overwrite
+            "subscribers_prod",
+            engine,
+            metadata,
+            define_subscribers_table,
+            is_prod=True,
+            overwrite=args.overwrite,
+        )
+
+        # Handle the 'token_prod' table
+        handle_table(
+            "token_prod",
+            engine,
+            metadata,
+            define_token_table,
+            is_prod=True,
+            overwrite=args.overwrite,
+            subscriber_table_name="subscribers_prod",
         )
 
     except Exception as e:
