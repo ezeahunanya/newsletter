@@ -12,7 +12,6 @@ from sqlalchemy import (
     MetaData,
 )
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import inspect
 import boto3
 import json
 from dotenv import load_dotenv
@@ -26,7 +25,7 @@ Base = declarative_base()
 
 
 # Define subscribers table
-def define_subscribers_table(name, metadata):
+def define_subscribers_table(name, metadata, **kwargs):
     return Table(
         name,
         metadata,
@@ -34,22 +33,16 @@ def define_subscribers_table(name, metadata):
         Column("email", String(255), nullable=False, unique=True),
         Column("first_name", String(100), nullable=True),
         Column("last_name", String(100), nullable=True),
-        Column(
-            "subscribed", Boolean, default=True, nullable=False
-        ),  # Subscription status
+        Column("subscribed", Boolean, default=True, nullable=False),
         Column("subscribed_at", DateTime, default=func.now(), nullable=False),
-        Column(
-            "unsubscribed_at", DateTime, nullable=True
-        ),  # Tracks unsubscribe timestamp
+        Column("unsubscribed_at", DateTime, nullable=True),
         Column("email_verified", Boolean, default=False, nullable=False),
-        Column(
-            "preferences", String(255), nullable=True
-        ),  # JSON-encoded string for email preferences
+        Column("preferences", String(255), nullable=True),
     )
 
 
 # Define token table
-def define_token_table(name, metadata, subscriber_table_name):
+def define_token_table(name, metadata, subscriber_table_name=None, **kwargs):
     return Table(
         name,
         metadata,
@@ -59,19 +52,17 @@ def define_token_table(name, metadata, subscriber_table_name):
             Integer,
             ForeignKey(f"{subscriber_table_name}.id"),
             nullable=False,
-        ),  # Links to the correct main table dynamically
+        ),
         Column("token_hash", String(255), nullable=False),
-        Column(
-            "token_type", String(50), nullable=False
-        ),  # Type of token (e.g., email_verification, unsubscribe, etc.)
+        Column("token_type", String(50), nullable=False),
         Column("expires_at", DateTime, nullable=False),
-        Column("used", Boolean, default=False),  # Tracks if the token has been used
+        Column("used", Boolean, default=False),
         Column("created_at", DateTime, default=func.now(), nullable=False),
         Column("updated_at", DateTime, default=func.now(), nullable=False),
     )
 
 
-# Prompt user for yes/no input
+# Prompt user for confirmation
 def prompt_user(question: str) -> bool:
     while True:
         response = input(f"{question} (y/n): ").strip().lower()
@@ -83,43 +74,32 @@ def prompt_user(question: str) -> bool:
             print("Invalid input. Please enter 'y' or 'n'.")
 
 
-# Handle the creation or overwriting of a table
-def handle_table(
-    table_name, engine, metadata, table_def, is_prod=False, overwrite=False, **kwargs
-):
-    table = table_def(table_name, metadata, **kwargs)
-    inspector = inspect(engine)
-
-    # Check if the table exists
-    existing_tables = inspector.get_table_names(schema="public")
-    if table_name in existing_tables:
-        if is_prod:
-            # Additional caution for the 'prod' table
-            if not overwrite:
-                print(
-                    f"Skipping overwrite of the production table '{table_name}'. Use '--overwrite' to force overwrite."
-                )
-                return
-            overwrite = prompt_user(
-                f"WARNING: The table '{table_name}' is a production table with real data. Are you sure you want to overwrite it?"
-            )
-
-        if not is_prod or overwrite:
-            try:
-                table.drop(engine)  # Drop the table
-                print(f"The table '{table_name}' has been dropped.")
-            except Exception as e:
-                print(f"Error dropping the table '{table_name}': {e}")
-        else:
-            print(f"Skipping creation of the table '{table_name}'.")
-            return
-
-    # Create the table
+# Drop a table if it exists
+def drop_table_if_exists(table_name, engine, metadata):
     try:
-        table.create(engine)
+        table = Table(table_name, metadata, autoload_with=engine)
+        table.drop(engine, checkfirst=True)
+        metadata.remove(table)  # Remove the table from metadata
+        print(f"The table '{table_name}' has been dropped.")
+    except Exception as e:
+        print(f"Error dropping the table '{table_name}': {e}")
+
+
+# Create a table if it does not exist
+def create_table_if_not_exists(table_name, engine, metadata, table_def, **kwargs):
+    table = table_def(table_name, metadata, extend_existing=True, **kwargs)
+    try:
+        # Attempt to create the table without checkfirst
+        table.create(engine)  # This will raise an error if the table exists
         print(f"The table '{table_name}' has been created successfully.")
     except Exception as e:
-        print(f"Error creating the table '{table_name}': {e}")
+        # If the table already exists, catch the error and inform the user
+        if "already exists" in str(e):
+            print(
+                f"The table '{table_name}' already exists. To overwrite it, use the '--overwrite' flag."
+            )
+        else:
+            print(f"Error creating the table '{table_name}': {e}")
 
 
 # Main execution
@@ -160,11 +140,13 @@ if __name__ == "__main__":
         engine = create_engine(DATABASE_URL)
         metadata = MetaData()  # Initialize metadata object
 
-        # Handle the 'subscribers_dev' table (non-prod)
-        handle_table("subscribers_dev", engine, metadata, define_subscribers_table)
-
-        # Handle the 'token_dev' table
-        handle_table(
+        # Handle dev tables (always drop and recreate)
+        drop_table_if_exists("token_dev", engine, metadata)
+        drop_table_if_exists("subscribers_dev", engine, metadata)
+        create_table_if_not_exists(
+            "subscribers_dev", engine, metadata, define_subscribers_table
+        )
+        create_table_if_not_exists(
             "token_dev",
             engine,
             metadata,
@@ -172,26 +154,38 @@ if __name__ == "__main__":
             subscriber_table_name="subscribers_dev",
         )
 
-        # Handle the 'subscribers_prod' table (prod, with extra caution if no --overwrite)
-        handle_table(
-            "subscribers_prod",
-            engine,
-            metadata,
-            define_subscribers_table,
-            is_prod=True,
-            overwrite=args.overwrite,
-        )
-
-        # Handle the 'token_prod' table
-        handle_table(
-            "token_prod",
-            engine,
-            metadata,
-            define_token_table,
-            is_prod=True,
-            overwrite=args.overwrite,
-            subscriber_table_name="subscribers_prod",
-        )
+        # Handle production tables
+        if args.overwrite:
+            # Prompt before dropping and recreating production tables
+            if prompt_user(
+                "WARNING: Do you want to drop the production tables ('subscribers_prod' and 'token_prod')? This will remove all data!"
+            ):
+                drop_table_if_exists("token_prod", engine, metadata)
+                drop_table_if_exists("subscribers_prod", engine, metadata)
+                create_table_if_not_exists(
+                    "subscribers_prod", engine, metadata, define_subscribers_table
+                )
+                create_table_if_not_exists(
+                    "token_prod",
+                    engine,
+                    metadata,
+                    define_token_table,
+                    subscriber_table_name="subscribers_prod",
+                )
+            else:
+                print("Skipping drop and recreation of production tables.")
+        else:
+            # Create production tables if they don't already exist
+            create_table_if_not_exists(
+                "subscribers_prod", engine, metadata, define_subscribers_table
+            )
+            create_table_if_not_exists(
+                "token_prod",
+                engine,
+                metadata,
+                define_token_table,
+                subscriber_table_name="subscribers_prod",
+            )
 
     except Exception as e:
         print(f"Error fetching database credentials or setting up the database: {e}")
