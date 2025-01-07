@@ -109,7 +109,11 @@ const insertToken = async (
 };
 
 // Send opt-in email using SES
-const sendOptInEmail = async (email, token) => {
+const sendOptInEmail = async (
+  email,
+  verificationUrl,
+  welcomeConfigurationSet,
+) => {
   const sesClient = new SESClient({ region: process.env.AWS_REGION });
 
   const emailParams = {
@@ -127,7 +131,7 @@ const sendOptInEmail = async (email, token) => {
               <body>
                 <p>Hey,</p>
                 <p>Thank you for subscribing! Please verify your email address by clicking the link below:</p>
-                <p><a href="${process.env.APP_URL}/verify-email?token=${token}">Verify your email</a></p>
+                <p><a href="${verificationUrl}">Verify your email</a></p>
                 <p>Please note that if you do not verify your email, you will not receive any further communications from me.</p>
                 <p>Thanks,</p>
                 <p>Eze</p>
@@ -141,6 +145,7 @@ const sendOptInEmail = async (email, token) => {
       },
     },
     Source: process.env.SES_SOURCE_EMAIL,
+    ConfigurationSetName: welcomeConfigurationSet,
   };
 
   try {
@@ -175,12 +180,18 @@ export const handler = async (event) => {
     TABLE_NAME_PROD,
     TOKEN_TABLE_DEV,
     TOKEN_TABLE_PROD,
+    WELCOME_CONFIGURATION_SET_DEV,
+    WELCOME_CONFIGURATION_SET_PROD,
     APP_STAGE,
   } = process.env;
   const subscriberTableName =
     APP_STAGE === "production" ? TABLE_NAME_PROD : TABLE_NAME_DEV;
   const tokenTableName =
     APP_STAGE === "production" ? TOKEN_TABLE_PROD : TOKEN_TABLE_DEV;
+  const welcomeConfigurationSet =
+    APP_STAGE === "production"
+      ? WELCOME_CONFIGURATION_SET_PROD
+      : WELCOME_CONFIGURATION_SET_DEV;
 
   let dbCredentials;
   let client;
@@ -210,7 +221,7 @@ export const handler = async (event) => {
 
     // Send opt-in email with the token
     const verificationUrl = `${process.env.VERIFICATION_URL}/verify-email?token=${token}`;
-    await sendOptInEmail(email, verificationUrl);
+    await sendOptInEmail(email, verificationUrl, welcomeConfigurationSet);
 
     return {
       statusCode: 200,
