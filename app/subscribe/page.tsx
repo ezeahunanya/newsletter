@@ -6,11 +6,11 @@ import {
 
 export default function Page() {
   return (
-    <div className="relative isolate min-h-screen overflow-hidden bg-gray-900 py-16 sm:py-24 lg:py-32">
+    <div className="relative isolate min-h-screen overflow-hidden bg-white py-16 sm:py-24 lg:py-32 dark:bg-gray-900">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-2">
           <div className="max-w-xl lg:max-w-lg">
-            <h2 className="max-w-xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:col-span-7">
+            <h2 className="max-w-xl text-balance text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:col-span-7 dark:text-white">
               Subscribe to my newsletter
             </h2>
             <SubscribeForm />
@@ -20,13 +20,13 @@ export default function Page() {
               <div className="rounded-md bg-white/5 p-2 ring-1 ring-white/10">
                 <CalendarDaysIcon
                   aria-hidden="true"
-                  className="size-6 text-white"
+                  className="size-6 text-gray-700 dark:text-white"
                 />
               </div>
-              <dt className="mt-4 text-base font-semibold text-white">
+              <dt className="mt-4 text-base font-semibold text-gray-900 dark:text-white">
                 Updates That Matter
               </dt>
-              <dd className="mt-2 text-base/7 text-gray-400">
+              <dd className="mt-2 text-base/7 text-gray-900 dark:text-gray-400">
                 I’ll share insights and ideas only when they’re genuinely worth
                 your time. No spam, no filler. Just value!
               </dd>
@@ -35,13 +35,13 @@ export default function Page() {
               <div className="rounded-md bg-white/5 p-2 ring-1 ring-white/10">
                 <ChatBubbleLeftRightIcon
                   aria-hidden="true"
-                  className="size-6 text-white"
+                  className="size-6 text-gray-700 dark:text-white"
                 />
               </div>
-              <dt className="mt-4 text-base font-semibold text-white">
+              <dt className="mt-4 text-base font-semibold text-gray-900 dark:text-white">
                 Start a Conversation
               </dt>
-              <dd className="mt-2 text-base/7 text-gray-400">
+              <dd className="mt-2 text-base/7 text-gray-900 dark:text-gray-400">
                 When you subscribe, you’ll receive an email address to reach me.
                 I’d love to hear from you. Let’s start a conversation!
               </dd>

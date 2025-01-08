@@ -42,12 +42,13 @@ const LoadingSpinner = () => (
 
 const getButtonClasses = (isLoading: boolean, isSuccess: boolean | null) =>
   clsx(
-    "flex-none rounded-md px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500",
+    "flex-none rounded-md px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-500",
     {
       "cursor-not-allowed bg-indigo-300": isLoading,
-      "bg-green-500": isSuccess === true,
-      "bg-red-500": isSuccess === false,
-      "bg-indigo-500 hover:bg-indigo-400": !isLoading && isSuccess === null,
+      "bg-green-600 dark:bg-green-500": isSuccess === true,
+      "bg-red-600 dark:bg-red-500": isSuccess === false,
+      "bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-500 dark:hover:bg-indigo-400":
+        !isLoading && isSuccess === null,
     },
   );
 
@@ -65,9 +66,9 @@ export default function SubscribeForm() {
   });
 
   const responseMessageStyle = useMemo(() => {
-    if (errors.email) return "text-red-500";
-    if (isSuccess === true) return "text-green-500";
-    return "text-red-500";
+    if (errors.email) return "text-red-600 dark:text-red-500";
+    if (isSuccess === true) return "text-green-600 dark:text-green-500";
+    return "text-red-600 dark:text-red-500";
   }, [errors.email, isSuccess]);
 
   const onSubmit = async (data: FormValues) => {
@@ -130,7 +131,7 @@ export default function SubscribeForm() {
           type="email"
           placeholder="Enter your email"
           autoComplete="email"
-          className="min-w-0 flex-auto rounded-md bg-white/5 px-3.5 py-2 text-base text-white outline outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+          className="min-w-0 flex-auto rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
         />
 
         <button
