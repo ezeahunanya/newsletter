@@ -1,5 +1,8 @@
 import SubscribeForm from "./subscribeForm";
-import { CalendarDaysIcon, HandRaisedIcon } from "@heroicons/react/24/outline";
+import {
+  CalendarDaysIcon,
+  ChatBubbleLeftRightIcon,
+} from "@heroicons/react/24/outline";
 
 export default function Page() {
   return (
@@ -8,11 +11,9 @@ export default function Page() {
         <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-2">
           <div className="max-w-xl lg:max-w-lg">
             <h2 className="max-w-xl text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:col-span-7">
-              Want content and service updates? Sign up for the newsletter.
+              Subscribe to my newsletter
             </h2>
-            <div className="mt-6 flex max-w-md gap-x-4">
-              <SubscribeForm />
-            </div>
+            <SubscribeForm />
           </div>
           <dl className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:pt-2">
             <div className="flex flex-col items-start">
@@ -23,26 +24,26 @@ export default function Page() {
                 />
               </div>
               <dt className="mt-4 text-base font-semibold text-white">
-                Occasional Updates
+                Updates That Matter
               </dt>
               <dd className="mt-2 text-base/7 text-gray-400">
-                Thoughtful insights and ideas shared only when they’re worth
-                your time. No pressure, no filler.
+                I’ll share insights and ideas only when they’re genuinely worth
+                your time. No spam, no filler. Just value!
               </dd>
             </div>
             <div className="flex flex-col items-start">
               <div className="rounded-md bg-white/5 p-2 ring-1 ring-white/10">
-                <HandRaisedIcon
+                <ChatBubbleLeftRightIcon
                   aria-hidden="true"
                   className="size-6 text-white"
                 />
               </div>
               <dt className="mt-4 text-base font-semibold text-white">
-                No Spam, Ever
+                Start a Conversation
               </dt>
               <dd className="mt-2 text-base/7 text-gray-400">
-                Your inbox is safe with me. I’ll only reach out when I truly
-                have something valuable to share.
+                When you subscribe, you’ll receive an email address to reach me.
+                I’d love to hear from you. Let’s start a conversation!
               </dd>
             </div>
           </dl>
