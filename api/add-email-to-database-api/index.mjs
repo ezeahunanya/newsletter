@@ -8,16 +8,21 @@ import pg from "pg";
 
 const { Client } = pg;
 
-// Cached database credentials
+// Cached instances to avoid redundant object creation
 let cachedDbCredentials = null;
+let secretsClient = null;
+let sesClient = null;
 
 // Fetch and cache database credentials
 const getDbCredentials = async () => {
   if (cachedDbCredentials) return cachedDbCredentials;
 
-  const secretsClient = new SecretsManagerClient({
-    region: process.env.AWS_REGION,
-  });
+  if (!secretsClient) {
+    secretsClient = new SecretsManagerClient({
+      region: process.env.AWS_REGION,
+    });
+  }
+
   const command = new GetSecretValueCommand({
     SecretId: process.env.DB_SECRET_ARN,
   });
@@ -30,6 +35,14 @@ const getDbCredentials = async () => {
     console.error("Failed to retrieve credentials:", error);
     throw new Error("Failed to retrieve database credentials");
   }
+};
+
+// Reuse SES client instance
+const getSESClient = () => {
+  if (!sesClient) {
+    sesClient = new SESClient({ region: process.env.AWS_REGION });
+  }
+  return sesClient;
 };
 
 // Establish and return a database connection
@@ -61,18 +74,18 @@ const validateEmail = (email) => {
   return emailRegex.test(email);
 };
 
-const defaultPreferences = {
-  updates: true,
-  promotions: true,
-};
-
 // Insert email into the database
 const insertEmail = async (client, tableName, email) => {
   const query = `
     INSERT INTO ${tableName} (email, subscribed, subscribed_at, email_verified, preferences)
     VALUES ($1, $2, NOW(), $3, $4) RETURNING id;
   `;
-  const values = [email, true, false, JSON.stringify(defaultPreferences)];
+  const values = [
+    email,
+    true,
+    false,
+    JSON.stringify({ updates: true, promotions: true }),
+  ];
 
   try {
     const res = await client.query(query, values);
@@ -109,17 +122,11 @@ const insertToken = async (
 };
 
 // Send opt-in email using SES
-const sendOptInEmail = async (
-  email,
-  verificationUrl,
-  welcomeConfigurationSet,
-) => {
-  const sesClient = new SESClient({ region: process.env.AWS_REGION });
+const sendOptInEmail = async (email, verificationUrl, configurationSet) => {
+  const sesClient = getSESClient();
 
   const emailParams = {
-    Destination: {
-      ToAddresses: [email],
-    },
+    Destination: { ToAddresses: [email] },
     Message: {
       Body: {
         Html: {
@@ -129,23 +136,16 @@ const sendOptInEmail = async (
                 <title>Email Verification</title>
               </head>
               <body>
-                <p>Hey,</p>
-                <p>Thank you for subscribing! Please verify your email address by clicking the link below:</p>
-                <p><a href="${verificationUrl}">Verify your email</a></p>
-                <p>Please note that if you do not verify your email, you will not receive any further communications from me.</p>
-                <p>Thanks,</p>
-                <p>Eze</p>
+                <p>Thank you for subscribing! Verify your email: <a href="${verificationUrl}">Click here</a></p>
               </body>
             </html>
           `,
         },
       },
-      Subject: {
-        Data: "Please verify your email address",
-      },
+      Subject: { Data: "Verify your email" },
     },
     Source: process.env.SES_SOURCE_EMAIL,
-    ConfigurationSetName: welcomeConfigurationSet,
+    ConfigurationSetName: configurationSet,
   };
 
   try {
@@ -154,6 +154,7 @@ const sendOptInEmail = async (
     console.log("Verification email sent successfully");
   } catch (error) {
     console.error("Error sending verification email:", error);
+    throw new Error("Failed to send email");
   }
 };
 
@@ -183,65 +184,49 @@ export const handler = async (event) => {
     WELCOME_CONFIGURATION_SET_DEV,
     WELCOME_CONFIGURATION_SET_PROD,
     APP_STAGE,
+    VERIFICATION_URL,
   } = process.env;
-  const subscriberTableName =
-    APP_STAGE === "production" ? TABLE_NAME_PROD : TABLE_NAME_DEV;
-  const tokenTableName =
-    APP_STAGE === "production" ? TOKEN_TABLE_PROD : TOKEN_TABLE_DEV;
-  const welcomeConfigurationSet =
-    APP_STAGE === "production"
-      ? WELCOME_CONFIGURATION_SET_PROD
-      : WELCOME_CONFIGURATION_SET_DEV;
 
-  let dbCredentials;
+  const isProd = APP_STAGE === "production";
+  const subscriberTableName = isProd ? TABLE_NAME_PROD : TABLE_NAME_DEV;
+  const tokenTableName = isProd ? TOKEN_TABLE_PROD : TOKEN_TABLE_DEV;
+  const configurationSet = isProd
+    ? WELCOME_CONFIGURATION_SET_PROD
+    : WELCOME_CONFIGURATION_SET_DEV;
+
   let client;
 
   try {
-    // Fetch credentials and connect to the database
-    dbCredentials = await getDbCredentials();
+    const dbCredentials = await getDbCredentials();
     client = await connectToDatabase(dbCredentials);
 
-    // Insert email into the database
     const userId = await insertEmail(client, subscriberTableName, email);
 
-    // Generate and store the token
     const token = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-    const tokenType = "email_verification";
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24-hour expiry
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await insertToken(
       client,
       tokenTableName,
       userId,
       tokenHash,
-      tokenType,
+      "email_verification",
       expiresAt,
     );
 
-    // Send opt-in email with the token
-    const verificationUrl = `${process.env.VERIFICATION_URL}/verify-email?token=${token}`;
-    await sendOptInEmail(email, verificationUrl, welcomeConfigurationSet);
+    const verificationUrl = `${VERIFICATION_URL}/verify-email?token=${token}`;
+    await sendOptInEmail(email, verificationUrl, configurationSet);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        message: "Email subscribed. Please verify your email.",
-      }),
+      body: JSON.stringify({ message: "Email subscribed. Please verify." }),
     };
   } catch (error) {
-    console.error("Error processing request:", error);
-
-    if (error.message === "Email already subscribed") {
-      return {
-        statusCode: 409,
-        body: JSON.stringify({ error: "Email already subscribed" }),
-      };
-    }
-
+    console.error("Error:", error);
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Internal server error" }),
+      statusCode: error.message === "Email already subscribed" ? 409 : 500,
+      body: JSON.stringify({ error: error.message }),
     };
   } finally {
     if (client) {
