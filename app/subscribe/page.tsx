@@ -1,8 +1,13 @@
 import SubscribeForm from "./subscribeForm";
+import { Metadata } from "next";
 import {
   CalendarDaysIcon,
   ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
+
+export const metadata: Metadata = {
+  title: "Subscribe Email",
+};
 
 export default function Page() {
   return (
