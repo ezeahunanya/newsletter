@@ -41,4 +41,4 @@ yarn-error.log*
 next-env.d.ts
 .python-version
 
-api/add-email-to-database-api/lambda.zip
+api/subscribe-api/lambda.zip
