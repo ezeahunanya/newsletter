@@ -53,7 +53,7 @@ def define_tokens_table(name, metadata, subscriber_table_name=None, **kwargs):
             ForeignKey(f"{subscriber_table_name}.id"),
             nullable=False,
         ),
-        Column("token_hash", String(255), nullable=False, index=True),  # Add index here
+        Column("token_hash", String(255), nullable=False, index=True, unique=True),
         Column("token_type", String(50), nullable=False),
         Column("expires_at", DateTime, nullable=False),
         Column("used", Boolean, default=False),
