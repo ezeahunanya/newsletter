@@ -28,7 +28,7 @@ export const sendVerificationEmail = async (
               </head>
               <body>
                 <p>Hey,</p>
-                <p>Thank you for subscribing! Please verify your email address by clicking the <a href="${verificationUrl}">link</a></p>
+                <p>Thank you for subscribing! Please verify your email address by clicking the <a href="${verificationUrl}">link</a>.</p>
                 <p>Please note that if you do not verify your email, you will not receive any further communications from me.</p>
                 <p>Thanks,</p>
                 <p>Eze</p>
