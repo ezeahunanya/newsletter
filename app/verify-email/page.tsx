@@ -7,13 +7,13 @@ export const metadata: Metadata = {
 };
 
 interface VerifyEmailProps {
-  searchParams: { token?: string }; // Automatically provided by the App Router
+  searchParams: Promise<{ token?: string }>;
 }
 
 export default async function VerifyEmailPage({
   searchParams,
 }: VerifyEmailProps) {
-  const token = searchParams.token;
+  const { token } = await searchParams;
 
   if (!token) {
     return (
@@ -34,7 +34,7 @@ export default async function VerifyEmailPage({
 
   // Simulate API call to verify token
   const result = await verifyToken(token);
-  
+
   if (result.error) {
     return (
       <div>
