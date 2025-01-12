@@ -1,5 +1,9 @@
 import { Metadata } from "next";
-import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/20/solid";
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
+} from "@heroicons/react/20/solid";
 import { verifyToken } from "./verifyEmail";
 
 export const metadata: Metadata = {
@@ -37,9 +41,20 @@ export default async function VerifyEmailPage({
 
   if (result.error) {
     return (
-      <div>
-        <h1>Verification Failed</h1>
-        <p>{result.error}</p>
+      <div className="rounded-md bg-yellow-50 p-4">
+        <div className="flex">
+          <div className="shrink-0">
+            <ExclamationTriangleIcon
+              aria-hidden="true"
+              className="size-5 text-yellow-400"
+            />
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-yellow-800">
+              {result.error}
+            </h3>
+          </div>
+        </div>
       </div>
     );
   }
