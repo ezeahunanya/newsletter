@@ -1,5 +1,5 @@
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-const verifyEmailPath = process.env.NEXT_PUBLIC_VERIFY_EMAIL_PATH;
+const verifyEmailPath = process.env.VERIFY_EMAIL_PATH;
 
 if (!apiBaseUrl || !verifyEmailPath) {
   throw new Error(
