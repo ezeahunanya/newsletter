@@ -23,9 +23,6 @@ export const sendVerificationEmail = async (
         Html: {
           Data: `
             <html>
-              <head>
-                <title>Email Verification</title>
-              </head>
               <body>
                 <p>Hey,</p>
                 <p>Thank you for subscribing! Please verify your email address by clicking the <a href="${verificationUrl}">link</a>.</p>
@@ -43,12 +40,31 @@ export const sendVerificationEmail = async (
     ConfigurationSetName: configurationSet,
   };
 
-  try {
-    const command = new SendEmailCommand(emailParams);
-    await sesClient.send(command);
-    console.log("Verification email sent successfully");
-  } catch (error) {
-    console.error("Error sending verification email:", error);
-    throw new Error("Failed to send email");
-  }
+  await sesClient.send(new SendEmailCommand(emailParams));
+};
+
+export const sendWelcomeEmail = async (
+  email,
+  accountCompletionUrl,
+  configurationSet,
+) => {
+  const sesClient = getSESClient();
+
+  const emailParams = {
+    Destination: { ToAddresses: [email] },
+    Message: {
+      Body: {
+        Html: {
+          Data: `
+            <p>Welcome to the community! Complete your account setup <a href="${accountCompletionUrl}">here</a>.</p>
+          `,
+        },
+      },
+      Subject: { Data: "Welcome to the Community" },
+    },
+    Source: process.env.SES_SOURCE_EMAIL,
+    ConfigurationSetName: configurationSet,
+  };
+
+  await sesClient.send(new SendEmailCommand(emailParams));
 };

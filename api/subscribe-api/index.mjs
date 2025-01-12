@@ -60,7 +60,13 @@ export const handler = async (event) => {
         throw new Error("Token is required.");
       }
 
-      await verifyEmail(client, tokenTableName, subscriberTableName, token);
+      await verifyEmail(
+        client,
+        tokenTableName,
+        subscriberTableName,
+        configurationSet,
+        token,
+      );
 
       return {
         statusCode: 200,
@@ -75,10 +81,9 @@ export const handler = async (event) => {
   } catch (error) {
     console.error(error);
 
-    // Check for duplicate email error from `subscribe.mjs`
     if (error.message === "This email is already subscribed.") {
       return {
-        statusCode: 400, // Bad Request
+        statusCode: 400,
         body: JSON.stringify({ error: "This email is already subscribed." }),
       };
     }
