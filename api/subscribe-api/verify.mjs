@@ -25,7 +25,7 @@ export const verifyEmail = async (
 
   // Check if the token is used
   if (used) {
-    throw new Error("Token has already been used");
+    throw new Error("Token has already been used: email already verified");
   }
 
   // Check if the token has expired
