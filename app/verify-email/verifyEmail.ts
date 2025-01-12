@@ -28,8 +28,13 @@ export async function verifyToken(token: string) {
 
     const data = await response.json();
     return { success: true, data };
-  } catch (error: any) {
-    console.error("Error verifying token:", error);
+  } catch (error: unknown) {
+    // Check if the error is an instance of Error
+    if (error instanceof Error) {
+      console.error("Error verifying token:", error.message);
+    } else {
+      console.error("Unknown error verifying token:", error);
+    }
     return { error: "An error occurred while verifying the token." };
   }
 }
