@@ -23,7 +23,7 @@ export async function verifyToken(token: string) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      return { error: errorData.message || "Verification failed." };
+      return { error: errorData.error || "Verification failed." };
     }
 
     const data = await response.json();
