@@ -5,13 +5,16 @@ import { useForm } from "react-hook-form";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL as string;
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const subscribeEmailPath = process.env.NEXT_PUBLIC_SUBSCRIBE_EMAIL_PATH;
 
-if (!apiUrl) {
+if (!apiBaseUrl || !subscribeEmailPath) {
   throw new Error(
-    "API URL is not defined. Please check your environment configuration.",
+    "API base URL or verify email path is not defined in environment variables.",
   );
 }
+
+const subscribeEmailUrl = `${apiBaseUrl}${subscribeEmailPath}`;
 
 type FormValues = {
   email: string;
@@ -77,7 +80,7 @@ export default function SubscribeForm() {
     setResponseMessage("");
 
     try {
-      const response = await fetch(apiUrl, {
+      const response = await fetch(subscribeEmailUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
