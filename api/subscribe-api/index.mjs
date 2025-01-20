@@ -60,7 +60,7 @@ export const handler = async (event) => {
         throw new Error("Token is required.");
       }
 
-      await verifyEmail(
+      const result = await verifyEmail(
         client,
         tokenTableName,
         subscriberTableName,
@@ -70,7 +70,7 @@ export const handler = async (event) => {
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ message: "Email verified successfully." }),
+        body: JSON.stringify(result),
       };
     } else if (normalizedPath === "/complete-account") {
       const { token } = event.queryStringParameters;

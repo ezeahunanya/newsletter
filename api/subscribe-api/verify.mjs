@@ -93,4 +93,6 @@ export const verifyEmail = async (
   // Send the welcome email with the account completion link
   const accountCompletionUrl = `${process.env.FRONTEND_DOMAIN_URL_DEV}/complete-account?token=${accountCompletionToken}`;
   await sendWelcomeEmail(email, accountCompletionUrl, configurationSet);
+
+  return { message: "Email verified successfully." };
 };
