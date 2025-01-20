@@ -88,10 +88,6 @@ export default function CompleteAccountForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      {responseMessage && (
-        <p style={{ color: isSuccess ? "green" : "red" }}>{responseMessage}</p>
-      )}
-
       <div className="space-y-10">
         <h2 className="text-base/7 font-semibold text-gray-900 dark:text-white">
           Fill in your name
@@ -164,6 +160,12 @@ export default function CompleteAccountForm({
           Save
         </Button>
       </div>
+      {responseMessage && (
+        <Message
+          type={isSuccess ? "success" : "error"}
+          message={responseMessage}
+        />
+      )}
     </form>
   );
 }
