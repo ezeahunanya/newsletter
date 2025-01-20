@@ -72,6 +72,31 @@ export const handler = async (event) => {
         statusCode: 200,
         body: JSON.stringify({ message: "Email verified successfully." }),
       };
+    } else if (normalizedPath === "/complete-account") {
+      const { token } = event.queryStringParameters;
+      const { firstName, lastName } = JSON.parse(event.body);
+
+      if (!token) {
+        throw new Error("Token is required.");
+      }
+
+      if (!firstName) {
+        throw new Error("First name is required.");
+      }
+
+      const result = await handleAddNames(
+        client,
+        tokenTableName,
+        subscriberTableName,
+        token,
+        firstName,
+        lastName,
+      );
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify(result),
+      };
     }
 
     return {
