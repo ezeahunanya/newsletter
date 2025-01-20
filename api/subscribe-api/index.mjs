@@ -1,6 +1,7 @@
 import { getDbCredentials, connectToDatabase } from "./db.mjs";
 import { handleSubscription } from "./subscribe.mjs";
 import { verifyEmail } from "./verify.mjs";
+import { handleAddNames } from "./addNames.mjs";
 
 const {
   TABLE_NAME_DEV,
