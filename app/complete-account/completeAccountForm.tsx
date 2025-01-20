@@ -42,7 +42,7 @@ export default function CompleteAccountForm({
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     setIsSuccess(null);
-    setResponseMessage(null);
+    setResponseMessage("");
 
     const processedData = {
       ...data,
@@ -61,18 +61,26 @@ export default function CompleteAccountForm({
         },
       );
 
+      const responseData = await response.json();
+
       if (response.ok) {
         setIsSuccess(true);
-        setResponseMessage("Account completed successfully!");
+        setResponseMessage(responseData.message);
         reset();
       } else {
-        const errorData = await response.json();
-        setResponseMessage(errorData.error || "Failed to complete account.");
+        setIsSuccess(false);
+        setResponseMessage(responseData.error || "Failed to complete account.");
       }
-    } catch (err) {
+    } catch (error) {
+      console.error("Error:", error);
+      setIsSuccess(false);
       setResponseMessage("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
+      setTimeout(() => {
+        setIsSuccess(null);
+        setResponseMessage("");
+      }, 5000);
     }
   };
 
