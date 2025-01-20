@@ -1,9 +1,20 @@
+import { Metadata } from "next";
 import CompleteAccountForm from "./completeAccountForm";
 import { XCircleIcon } from "@heroicons/react/24/outline";
 
-export default async function CompleteAccountPage({ searchParams }) {
-  const token = searchParams?.token;
-  
+export const metadata: Metadata = {
+  title: "Complete Account",
+};
+
+interface CompleteAccountProps {
+  searchParams: Promise<{ token?: string }>;
+}
+
+export default async function CompleteAccountPage({
+  searchParams,
+}: CompleteAccountProps) {
+  const { token } = await searchParams;
+
   if (!token) {
     return (
       <div className="rounded-md bg-red-50 p-4">

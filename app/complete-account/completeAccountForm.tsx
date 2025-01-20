@@ -1,54 +1,96 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import Button from "../components/ui/button";
+import Message from "../components/ui/message";
 
-export default function CompleteAccountForm({ token }) {
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const completeAccountPath = process.env.NEXT_PUBLIC_COMPLETE_ACCOUNT_PATH;
+
+if (!apiBaseUrl || !completeAccountPath) {
+  throw new Error(
+    "API base URL or complete account path is not defined in environment variables.",
+  );
+}
+
+const completeAccountUrl = `${apiBaseUrl}${completeAccountPath}`;
+
+interface FormData {
+  firstName: string;
+  lastName?: string;
+}
+
+interface CompleteAccountFormProps {
+  token: string;
+}
+
+export default function CompleteAccountForm({
+  token,
+}: CompleteAccountFormProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm();
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
+  } = useForm<FormData>();
 
-  const onSubmit = async (data) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
+  const [responseMessage, setResponseMessage] = useState<string | null>(null);
+
+  const onSubmit = async (data: FormData) => {
+    setIsLoading(true);
+    setIsSuccess(null);
+    setResponseMessage(null);
+
+    const processedData = {
+      ...data,
+      lastName: data.lastName || null, // Convert undefined to null
+    };
+
     try {
-      const response = await fetch("/api/complete-account", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${completeAccountUrl}?token=${encodeURIComponent(token)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(processedData),
         },
-        body: JSON.stringify({ ...data, token }),
-      });
+      );
 
       if (response.ok) {
-        setSuccessMessage("Account completed successfully!");
+        setIsSuccess(true);
+        setResponseMessage("Account completed successfully!");
         reset();
       } else {
         const errorData = await response.json();
-        setError(errorData.message || "Failed to complete account.");
+        setResponseMessage(errorData.error || "Failed to complete account.");
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setResponseMessage("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
+      {responseMessage && (
+        <p style={{ color: isSuccess ? "green" : "red" }}>{responseMessage}</p>
+      )}
 
       <div className="space-y-10">
-        <h2 className="text-base/7 font-semibold text-white">
+        <h2 className="text-base/7 font-semibold text-gray-900 dark:text-white">
           Fill in your name
         </h2>
         <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
           <div className="sm:col-span-3">
             <label
               htmlFor="first-name"
-              className="block text-sm/6 font-medium text-white"
+              className="block text-sm/6 font-medium text-gray-900 dark:text-white"
             >
               First name{" "}
               <span className="text-red-600 dark:text-red-500">*</span>
@@ -57,15 +99,16 @@ export default function CompleteAccountForm({ token }) {
               <input
                 id="first-name"
                 {...register("firstName", {
-                  required: "First Name is required",
+                  required: "First name is required",
                 })}
-                name="first-name"
+                name="firstName"
                 type="text"
                 autoComplete="given-name"
-                className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+                placeholder="First name"
+                className="block w-full rounded-md bg-gray-100 px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
               />
               {errors.firstName && (
-                <p style={{ color: "red" }}>{errors.firstName.message}</p>
+                <Message type="error" message={errors.firstName.message} />
               )}
             </div>
           </div>
@@ -73,7 +116,7 @@ export default function CompleteAccountForm({ token }) {
           <div className="sm:col-span-3">
             <label
               htmlFor="last-name"
-              className="block text-sm/6 font-medium text-white"
+              className="block text-sm/6 font-medium text-gray-900 dark:text-white"
             >
               Last name
             </label>
@@ -81,10 +124,11 @@ export default function CompleteAccountForm({ token }) {
               <input
                 id="last-name"
                 {...register("lastName")}
-                name="last-name"
+                name="lastName"
                 type="text"
                 autoComplete="family-name"
-                className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+                placeholder="Last name"
+                className="block w-full rounded-md bg-gray-100 px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
               />
             </div>
           </div>
@@ -92,12 +136,9 @@ export default function CompleteAccountForm({ token }) {
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-x-6">
-        <button
-          type="submit"
-          className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-        >
+        <Button isLoading={isLoading} isSuccess={isSuccess} type="submit">
           Save
-        </button>
+        </Button>
       </div>
     </form>
   );
