@@ -43,7 +43,7 @@ export const handleAddNames = async (
   // Mark the token as used
   const markUsedQuery = `
     UPDATE ${tokenTableName}
-    SET used = true
+    SET used = true, updated_at = NOW()
     WHERE token_hash = $1;
   `;
   await client.query(markUsedQuery, [tokenHash]);
