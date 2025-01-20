@@ -2,6 +2,7 @@ import { getDbCredentials, connectToDatabase } from "./db.mjs";
 import { handleSubscription } from "./subscribe.mjs";
 import { verifyEmail } from "./verify.mjs";
 import { handleAddNames } from "./addNames.mjs";
+import { validateToken } from "./validateToken.mjs";
 
 const {
   TABLE_NAME_DEV,
@@ -74,30 +75,54 @@ export const handler = async (event) => {
         body: JSON.stringify(result),
       };
     } else if (normalizedPath === "/complete-account") {
-      const { token } = event.queryStringParameters;
-      const { firstName, lastName } = JSON.parse(event.body);
+      const method = event.requestContext.http.method; // Check the HTTP method (GET or POST)
 
-      if (!token) {
-        throw new Error("Token is required.");
+      if (method === "GET") {
+        // Handle token validation
+        const { token } = event.queryStringParameters;
+
+        if (!token) {
+          throw new Error("Token is required.");
+        }
+
+        const result = await validateToken(client, tokenTableName, token);
+
+        return {
+          statusCode: 200,
+          body: JSON.stringify(result),
+        };
+      } else if (method === "POST") {
+        // Handle adding names
+        const { token } = event.queryStringParameters;
+        const { firstName, lastName } = JSON.parse(event.body);
+
+        if (!token) {
+          throw new Error("Token is required.");
+        }
+
+        if (!firstName) {
+          throw new Error("First name is required.");
+        }
+
+        const result = await handleAddNames(
+          client,
+          tokenTableName,
+          subscriberTableName,
+          token,
+          firstName,
+          lastName,
+        );
+
+        return {
+          statusCode: 200,
+          body: JSON.stringify(result),
+        };
+      } else {
+        return {
+          statusCode: 405,
+          body: JSON.stringify({ error: "Method Not Allowed" }),
+        };
       }
-
-      if (!firstName) {
-        throw new Error("First name is required.");
-      }
-
-      const result = await handleAddNames(
-        client,
-        tokenTableName,
-        subscriberTableName,
-        token,
-        firstName,
-        lastName,
-      );
-
-      return {
-        statusCode: 200,
-        body: JSON.stringify(result),
-      };
     }
 
     return {

@@ -8,10 +8,8 @@ export const handleAddNames = async (
   firstName,
   lastName = null,
 ) => {
-  // Hash the token
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-  // Check if the token exists and is valid
   const tokenQuery = `
     SELECT user_id, used, expires_at FROM ${tokenTableName}
     WHERE token_hash = $1 AND token_type = 'account_completion';
@@ -32,7 +30,6 @@ export const handleAddNames = async (
     throw new Error("Token has expired.");
   }
 
-  // Update the subscriber table with the provided names
   const updateQuery = `
     UPDATE ${subscriberTableName}
     SET first_name = $1, last_name = $2
@@ -40,7 +37,6 @@ export const handleAddNames = async (
   `;
   await client.query(updateQuery, [firstName, lastName || null, user_id]);
 
-  // Mark the token as used
   const markUsedQuery = `
     UPDATE ${tokenTableName}
     SET used = true, updated_at = NOW()
