@@ -128,7 +128,7 @@ export const handler = async (event) => {
           body: JSON.stringify({ error: "Method Not Allowed" }),
         };
       }
-    } else if (normalizedPath === "/preferences") {
+    } else if (normalizedPath === "/manage-preferences") {
       const method = event.requestContext.http.method; // Check the HTTP method (GET or POST)
       const { token } = event.queryStringParameters;
 
@@ -186,7 +186,9 @@ export const handler = async (event) => {
 
           return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Unsubscribed from all successfully." }),
+            body: JSON.stringify({
+              message: "Unsubscribed from all successfully.",
+            }),
           };
         } else {
           // Update specific preferences
@@ -201,7 +203,9 @@ export const handler = async (event) => {
 
           return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Preferences updated successfully." }),
+            body: JSON.stringify({
+              message: "Preferences updated successfully.",
+            }),
           };
         }
       } else {

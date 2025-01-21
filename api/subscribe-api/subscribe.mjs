@@ -22,7 +22,14 @@ export const handleSubscription = async (
       INSERT INTO ${subscriberTableName} (email, subscribed, subscribed_at, email_verified, preferences)
       VALUES ($1, true, NOW(), false, $2) RETURNING id;
     `,
-      [email, JSON.stringify({ updates: true, promotions: true })],
+      [
+        email,
+        JSON.stringify({
+          updates: true,
+          promotions: true,
+          unsubscribeAll: false,
+        }),
+      ],
     );
 
     await client.query(

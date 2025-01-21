@@ -41,8 +41,10 @@ export const validateToken = async (
     }
   }
 
-  if (new Date() > new Date(expires_at)) {
-    throw new Error("Token has expired.");
+  if (tokenType !== "preferences") {
+    if (new Date() > new Date(expires_at)) {
+      throw new Error("Token has expired.");
+    }
   }
 
   return { ...additionalFieldsResult, message: "Token is valid." };
