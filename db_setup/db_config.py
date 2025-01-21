@@ -55,8 +55,8 @@ def define_tokens_table(name, metadata, subscriber_table_name=None, **kwargs):
         ),
         Column("token_hash", String(255), nullable=False, index=True, unique=True),
         Column("token_type", String(50), nullable=False),
-        Column("expires_at", DateTime, nullable=False),
-        Column("used", Boolean, default=False),
+        Column("expires_at", DateTime, nullable=True),
+        Column("used", Boolean, nullable=True),
         Column("created_at", DateTime, default=func.now(), nullable=False),
         Column("updated_at", DateTime, default=func.now(), nullable=False),
     )
