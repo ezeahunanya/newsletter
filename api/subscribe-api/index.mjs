@@ -85,7 +85,12 @@ export const handler = async (event) => {
           throw new Error("Token is required.");
         }
 
-        const result = await validateToken(client, tokenTableName, token);
+        const result = await validateToken(
+          client,
+          tokenTableName,
+          token,
+          "account_completion",
+        );
 
         return {
           statusCode: 200,

@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { validateToken } from "./validateToken.mjs";
 
 export const handleAddNames = async (
   client,
@@ -8,27 +9,13 @@ export const handleAddNames = async (
   firstName,
   lastName = null,
 ) => {
+  const { user_id } = await validateToken(
+    client,
+    tokenTableName,
+    token,
+    "account_completion",
+  );
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-
-  const tokenQuery = `
-    SELECT user_id, used, expires_at FROM ${tokenTableName}
-    WHERE token_hash = $1 AND token_type = 'account_completion';
-  `;
-  const tokenResult = await client.query(tokenQuery, [tokenHash]);
-
-  if (tokenResult.rows.length === 0) {
-    throw new Error("Invalid token.");
-  }
-
-  const { user_id, used, expires_at } = tokenResult.rows[0];
-
-  if (used) {
-    throw new Error("Token has already been used.");
-  }
-
-  if (new Date() > new Date(expires_at)) {
-    throw new Error("Token has expired.");
-  }
 
   const updateQuery = `
     UPDATE ${subscriberTableName}
@@ -44,5 +31,5 @@ export const handleAddNames = async (
   `;
   await client.query(markUsedQuery, [tokenHash]);
 
-  return { message: "Names added successfully." };
+  return { message: "Names successfully added." };
 };

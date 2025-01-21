@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { validateToken } from "./validateToken.mjs";
 import { sendWelcomeEmail } from "./email.mjs";
 
 export const verifyEmail = async (
@@ -8,31 +9,14 @@ export const verifyEmail = async (
   configurationSet,
   token,
 ) => {
+  const { user_id, email } = await validateToken(
+    client,
+    tokenTableName,
+    token,
+    "email_verification",
+    subscriberTableName,
+  );
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-
-  // Check if the token exists in the token table and fetch related data
-  const tokenQuery = `
-    SELECT t.user_id, t.expires_at, t.used, s.email
-    FROM ${tokenTableName} t
-    JOIN ${subscriberTableName} s ON t.user_id = s.id
-    WHERE t.token_hash = $1 AND t.token_type = 'email_verification';
-  `;
-  const tokenResult = await client.query(tokenQuery, [tokenHash]);
-
-  if (tokenResult.rows.length === 0) {
-    throw new Error("Invalid token");
-  }
-
-  const { user_id, expires_at, used, email } = tokenResult.rows[0];
-
-  if (used) {
-    throw new Error("Token has already been used: email already verified");
-  }
-
-  const currentTime = new Date();
-  if (currentTime > new Date(expires_at)) {
-    throw new Error("Token has expired");
-  }
 
   // Mark email as verified in the subscriber table
   const updateQuery = `
