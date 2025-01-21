@@ -48,47 +48,12 @@ export default function PreferencesPage() {
   };
 
   return (
-    <fieldset className="preferences-page max-w-md mx-auto mt-8">
+    <fieldset className="mx-auto mt-8 max-w-xs">
       <legend className="sr-only">Preferences</legend>
-      <h1 className="text-xl font-bold mb-4">Preferences</h1>
-      <div className="space-y-5">
-        <div className="flex gap-3">
-          <div className="flex h-6 shrink-0 items-center">
-            <div className="group grid size-4 grid-cols-1">
-              <input
-                id="promotions"
-                name="promotions"
-                type="checkbox"
-                checked={preferences.promotions}
-                onChange={(e) =>
-                  handleCheckboxChange("promotions", e.target.checked)
-                }
-                className="col-start-1 row-start-1 appearance-none rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 checked:border-indigo-600 checked:bg-indigo-600 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-500"
-              />
-              <svg
-                fill="none"
-                viewBox="0 0 14 14"
-                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white"
-              >
-                <path
-                  d="M3 8L6 11L11 3.5"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={`opacity-0 ${
-                    preferences.promotions ? "opacity-100" : ""
-                  }`}
-                />
-              </svg>
-            </div>
-          </div>
-          <div className="text-sm/6">
-            <label htmlFor="promotions" className="font-medium text-gray-900 dark:text-gray-300">
-              Receive Promotions
-            </label>
-          </div>
-        </div>
-
+      <h1 className="mb-4 text-base/7 font-bold text-gray-900 dark:text-white">
+        Preferences
+      </h1>
+      <div className="space-y-6">
         <div className="flex gap-3">
           <div className="flex h-6 shrink-0 items-center">
             <div className="group grid size-4 grid-cols-1">
@@ -97,8 +62,10 @@ export default function PreferencesPage() {
                 name="updates"
                 type="checkbox"
                 checked={preferences.updates}
-                onChange={(e) => handleCheckboxChange("updates", e.target.checked)}
-                className="col-start-1 row-start-1 appearance-none rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 checked:border-indigo-600 checked:bg-indigo-600 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-500"
+                onChange={(e) =>
+                  handleCheckboxChange("updates", e.target.checked)
+                }
+                className="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500"
               />
               <svg
                 fill="none"
@@ -118,13 +85,56 @@ export default function PreferencesPage() {
             </div>
           </div>
           <div className="text-sm/6">
-            <label htmlFor="updates" className="font-medium text-gray-900 dark:text-gray-300">
+            <label
+              htmlFor="updates"
+              className="font-medium text-gray-900 dark:text-gray-300"
+            >
               Receive Updates
             </label>
           </div>
         </div>
 
         <div className="flex gap-3">
+          <div className="flex h-6 shrink-0 items-center">
+            <div className="group grid size-4 grid-cols-1">
+              <input
+                id="promotions"
+                name="promotions"
+                type="checkbox"
+                checked={preferences.promotions}
+                onChange={(e) =>
+                  handleCheckboxChange("promotions", e.target.checked)
+                }
+                className="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500"
+              />
+              <svg
+                fill="none"
+                viewBox="0 0 14 14"
+                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white"
+              >
+                <path
+                  d="M3 8L6 11L11 3.5"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`opacity-0 ${
+                    preferences.promotions ? "opacity-100" : ""
+                  }`}
+                />
+              </svg>
+            </div>
+          </div>
+          <div className="text-sm/6">
+            <label
+              htmlFor="promotions"
+              className="font-medium text-gray-900 dark:text-gray-300"
+            >
+              Receive Promotions
+            </label>
+          </div>
+        </div>
+
+        <div className="flex gap-3 border-t border-gray-300 pt-6 dark:border-gray-700">
           <div className="flex h-6 shrink-0 items-center">
             <div className="group grid size-4 grid-cols-1">
               <input
@@ -135,7 +145,7 @@ export default function PreferencesPage() {
                 onChange={(e) =>
                   handleCheckboxChange("unsubscribeAll", e.target.checked)
                 }
-                className="col-start-1 row-start-1 appearance-none rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 checked:border-indigo-600 checked:bg-indigo-600 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-500"
+                className="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500"
               />
               <svg
                 fill="none"
@@ -159,14 +169,14 @@ export default function PreferencesPage() {
               htmlFor="unsubscribeAll"
               className="font-medium text-gray-900 dark:text-gray-300"
             >
-              Unsubscribe from All
+              Unsubscribe From All
             </label>
           </div>
         </div>
       </div>
       <button
         onClick={handleSave}
-        className="mt-6 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+        className="mt-6 rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
       >
         Save Preferences
       </button>
