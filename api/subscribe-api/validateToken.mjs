@@ -26,13 +26,19 @@ export const validateToken = async (
   const tokenResult = await client.query(tokenQuery, [tokenHash, tokenType]);
 
   if (tokenResult.rows.length === 0) {
-    throw new Error("Invalid token.");
+    throw new Error("User not found: Invalid token.");
   }
 
   const { used, expires_at, ...additionalFieldsResult } = tokenResult.rows[0];
 
   if (used) {
-    throw new Error("Token has already been used.");
+    if (tokenType === "email_verification") {
+      throw new Error("Email already subscribed: Token has already been used.");
+    } else if (tokenType === "account_completion") {
+      throw new Error("Name already saved: Token has already been used.");
+    } else {
+      throw new Error("Token has already been used.");
+    }
   }
 
   if (new Date() > new Date(expires_at)) {
