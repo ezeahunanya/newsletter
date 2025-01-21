@@ -47,6 +47,7 @@ export const sendWelcomeEmail = async (
   email,
   accountCompletionUrl,
   configurationSet,
+  preferencesUrl,
 ) => {
   const sesClient = getSESClient();
 
@@ -68,6 +69,7 @@ export const sendWelcomeEmail = async (
                 <p>Let’s walk this journey together!</p>
                 <p>With faith and purpose,</p>
                 <p>Eze</p>
+                <p>To manage your preferences or unsubscribe, click <a href="${preferencesUrl}">here</a>.</p>
               </body>
             </html>
           `,

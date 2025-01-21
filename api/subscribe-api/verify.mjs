@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { generateUniqueToken } from "./generateUniqueToken.mjs";
 import { validateToken } from "./validateToken.mjs";
 import { sendWelcomeEmail } from "./email.mjs";
@@ -49,9 +50,28 @@ export const verifyEmail = async (
     [user_id, accountCompletionHash, accountCompletionExpiresAt],
   );
 
-  // Send the welcome email with the account completion link
+  // Generate preferences token
+  const { token: preferencesToken, tokenHash: preferencesHash } =
+    await generateUniqueToken(client, tokenTableName);
+
+  // Insert the preferences token into the database
+  await client.query(
+    `
+    INSERT INTO ${tokenTableName} (user_id, token_hash, token_type, created_at, updated_at)
+    VALUES ($1, $2, 'preferences', NOW(), NOW());
+  `,
+    [user_id, preferencesHash],
+  );
+
+  // Send the welcome email with both URLs
   const accountCompletionUrl = `${process.env.FRONTEND_DOMAIN_URL_DEV}/complete-account?token=${accountCompletionToken}`;
-  await sendWelcomeEmail(email, accountCompletionUrl, configurationSet);
+  const preferencesUrl = `${process.env.FRONTEND_DOMAIN_URL_DEV}/manage-preferences?token=${preferencesToken}`;
+  await sendWelcomeEmail(
+    email,
+    accountCompletionUrl,
+    configurationSet,
+    preferencesUrl,
+  );
 
   return { message: "Email verified successfully." };
 };
