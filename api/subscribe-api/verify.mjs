@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import { generateUniqueToken } from "./generateUniqueToken.mjs";
 import { validateToken } from "./validateToken.mjs";
 import { sendWelcomeEmail } from "./email.mjs";
 
@@ -34,34 +34,9 @@ export const verifyEmail = async (
   `;
   await client.query(markUsedQuery, [tokenHash]);
 
-  // Generate account completion token with retries
-  let retries = 0;
-  let accountCompletionToken, accountCompletionHash, isUnique;
-  const maxRetries = 5;
-
-  do {
-    if (retries >= maxRetries) {
-      throw new Error(
-        "Failed to generate a unique account completion token after multiple attempts.",
-      );
-    }
-
-    accountCompletionToken = crypto.randomBytes(32).toString("hex");
-    accountCompletionHash = crypto
-      .createHash("sha256")
-      .update(accountCompletionToken)
-      .digest("hex");
-
-    const tokenCheckQuery = `
-      SELECT 1 FROM ${tokenTableName} WHERE token_hash = $1;
-    `;
-    const tokenCheckResult = await client.query(tokenCheckQuery, [
-      accountCompletionHash,
-    ]);
-
-    isUnique = tokenCheckResult.rows.length === 0;
-    retries++;
-  } while (!isUnique);
+  // Generate account completion token
+  const { token: accountCompletionToken, tokenHash: accountCompletionHash } =
+    await generateUniqueToken(client, tokenTableName);
 
   const accountCompletionExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 

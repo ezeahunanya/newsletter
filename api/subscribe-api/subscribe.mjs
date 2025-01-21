@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import { generateUniqueToken } from "./generateUniqueToken.mjs";
 import { sendVerificationEmail } from "./email.mjs";
 
 export const handleSubscription = async (
@@ -8,33 +8,15 @@ export const handleSubscription = async (
   email,
   frontendUrlBase,
   configurationSet,
-  maxRetries = 5,
 ) => {
-  let retries = 0;
-  let token, tokenHash, isUnique;
-
-  do {
-    if (retries >= maxRetries) {
-      throw new Error(
-        "Failed to generate a unique token after multiple attempts.",
-      );
-    }
-
-    token = crypto.randomBytes(32).toString("hex");
-    tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-
-    const tokenCheckQuery = `
-      SELECT 1 FROM ${tokenTableName} WHERE token_hash = $1;
-    `;
-    const tokenCheckResult = await client.query(tokenCheckQuery, [tokenHash]);
-
-    isUnique = tokenCheckResult.rows.length === 0;
-    retries++;
-  } while (!isUnique);
-
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
   try {
+    const { token, tokenHash } = await generateUniqueToken(
+      client,
+      tokenTableName,
+    );
+
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
     const userId = await client.query(
       `
       INSERT INTO ${subscriberTableName} (email, subscribed, subscribed_at, email_verified, preferences)
