@@ -55,7 +55,7 @@ export default function PreferencesForm({
         alert("Preferences saved successfully!");
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
+        alert(`Error: ${errorData.error}`);
       }
     } catch (error) {
       console.error(error);

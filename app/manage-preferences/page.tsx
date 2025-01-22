@@ -58,10 +58,7 @@ export default async function PreferencesPage({
     );
   }
 
-  const initialPreferences =
-    typeof preferencesData.data.preferences === "string"
-      ? JSON.parse(preferencesData.data.preferences)
-      : preferencesData.data.preferences;
+  const initialPreferences = preferencesData?.data?.preferences;
 
   return (
     <div>
