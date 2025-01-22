@@ -66,7 +66,6 @@ export default function PreferencesForm({
         setIsSuccess(true);
         setResponseMessage(responseData.message);
       } else {
-        const errorData = await response.json();
         setIsSuccess(false);
         setResponseMessage(responseData.error);
       }
