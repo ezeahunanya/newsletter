@@ -31,9 +31,11 @@ export default function CompleteAccountForm({
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     reset,
-  } = useForm<FormData>();
+  } = useForm<FormData>({
+    mode: "onChange", // Validate on each change
+  });
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
@@ -156,7 +158,12 @@ export default function CompleteAccountForm({
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-x-6">
-        <Button isLoading={isLoading} isSuccess={isSuccess} type="submit">
+        <Button
+          isLoading={isLoading}
+          isSuccess={isSuccess}
+          disabled={!isValid}
+          type="submit"
+        >
           Save
         </Button>
       </div>
