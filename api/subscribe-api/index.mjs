@@ -3,6 +3,7 @@ import { handleSubscription } from "./subscribe.mjs";
 import { verifyEmail } from "./verify.mjs";
 import { handleAddNames } from "./addNames.mjs";
 import { validateToken } from "./validateToken.mjs";
+import { handleManagePreferences } from "./managePreferences.mjs";
 
 const {
   TABLE_NAME_DEV,
@@ -78,7 +79,6 @@ export const handler = async (event) => {
       const method = event.requestContext.http.method; // Check the HTTP method (GET or POST)
 
       if (method === "GET") {
-        // Handle token validation
         const { token } = event.queryStringParameters;
 
         if (!token) {
@@ -97,7 +97,6 @@ export const handler = async (event) => {
           body: JSON.stringify(result),
         };
       } else if (method === "POST") {
-        // Handle adding names
         const { token } = event.queryStringParameters;
         const { firstName, lastName } = JSON.parse(event.body);
 
@@ -129,91 +128,12 @@ export const handler = async (event) => {
         };
       }
     } else if (normalizedPath === "/manage-preferences") {
-      const method = event.requestContext.http.method; // Check the HTTP method (GET or POST)
-      const { token } = event.queryStringParameters;
-
-      if (!token) {
-        throw new Error("Token is required.");
-      }
-
-      const { user_id } = await validateToken(
+      return await handleManagePreferences(
         client,
+        event,
         tokenTableName,
-        token,
-        "preferences",
+        subscriberTableName,
       );
-
-      if (method === "GET") {
-        // Fetch and return the user's preferences
-        const query = `
-          SELECT preferences
-          FROM ${subscriberTableName}
-          WHERE id = $1;
-        `;
-        const result = await client.query(query, [user_id]);
-
-        if (result.rows.length === 0) {
-          return {
-            statusCode: 404,
-            body: JSON.stringify({ message: "User not found." }),
-          };
-        }
-
-        const { preferences } = result.rows[0];
-        return {
-          statusCode: 200,
-          body: JSON.stringify({ preferences }),
-        };
-      } else if (method === "POST") {
-        // Parse and update preferences
-        const { preferences } = JSON.parse(event.body);
-
-        if (!preferences) {
-          throw new Error("Preferences are required.");
-        }
-
-        if (preferences.unsubscribeAll) {
-          // Unsubscribe from all
-          const updateQuery = `
-            UPDATE ${subscriberTableName}
-            SET subscribed = false,
-                unsubscribe_time = NOW(),
-                preferences = jsonb_set(preferences, '{promotions}', 'false', true)
-                              || jsonb_set(preferences, '{updates}', 'false', true)
-            WHERE id = $1;
-          `;
-          await client.query(updateQuery, [user_id]);
-
-          return {
-            statusCode: 200,
-            body: JSON.stringify({
-              message: "Unsubscribed from all successfully.",
-            }),
-          };
-        } else {
-          // Update specific preferences
-          const updateQuery = `
-            UPDATE ${subscriberTableName}
-            SET preferences = $1,
-                subscribed = true,
-                unsubscribe_time = NULL
-            WHERE id = $2;
-          `;
-          await client.query(updateQuery, [preferences, user_id]);
-
-          return {
-            statusCode: 200,
-            body: JSON.stringify({
-              message: "Preferences updated successfully.",
-            }),
-          };
-        }
-      } else {
-        return {
-          statusCode: 405,
-          body: JSON.stringify({ error: "Method Not Allowed" }),
-        };
-      }
     }
 
     return {
