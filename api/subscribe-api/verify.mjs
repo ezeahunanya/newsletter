@@ -73,5 +73,5 @@ export const verifyEmail = async (
     preferencesUrl,
   );
 
-  return { message: "Email verified successfully." };
+  return { message: "Email verified successfully. Please check email." };
 };
