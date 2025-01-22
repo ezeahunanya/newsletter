@@ -11,6 +11,7 @@ from sqlalchemy import (
     Table,
     MetaData,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import declarative_base
 import boto3
 import json
@@ -37,7 +38,7 @@ def define_subscribers_table(name, metadata, **kwargs):
         Column("subscribed_at", DateTime, default=func.now(), nullable=False),
         Column("unsubscribed_at", DateTime, nullable=True),
         Column("email_verified", Boolean, default=False, nullable=False),
-        Column("preferences", String(255), nullable=True),
+        Column("preferences", JSONB, nullable=False, default={}),  # Use JSONB here
     )
 
 
