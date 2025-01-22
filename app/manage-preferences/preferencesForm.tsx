@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import Button from "../components/ui/button";
+import Message from "../components/ui/message";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 const managePreferencesPath = process.env.NEXT_PUBLIC_MANAGE_PREFERENCES_PATH;
@@ -36,9 +37,17 @@ export default function PreferencesForm({
     defaultValues: initialPreferences,
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
+  const [responseMessage, setResponseMessage] = useState("");
+
   const currentValues = watch();
 
   const onSubmit = async (data: FormValues) => {
+    setIsLoading(true); // Start loading state
+    setIsSuccess(false); // Reset success state before making the request
+    setResponseMessage(""); // Reset response message
+
     try {
       const response = await fetch(
         `${managePreferencesUrl}?token=${encodeURIComponent(token)}`,
@@ -51,15 +60,26 @@ export default function PreferencesForm({
         },
       );
 
+      const responseData = await response.json();
+
       if (response.ok) {
-        alert("Preferences saved successfully!");
+        setIsSuccess(true);
+        setResponseMessage(responseData.message);
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.error}`);
+        setIsSuccess(false);
+        setResponseMessage(responseData.error);
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred while saving preferences.");
+      setIsSuccess(false);
+      setResponseMessage("An error occurred while saving preferences.");
+    } finally {
+      setIsLoading(false); // End loading state
+      setTimeout(() => {
+        setIsSuccess(null);
+        setResponseMessage("");
+      }, 2000);
     }
   };
 
@@ -171,12 +191,21 @@ export default function PreferencesForm({
           </Button>
         </div>
 
-        <button
+        {/* Submit Button */}
+        <Button
           type="submit"
-          className="mt-6 rounded bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+          isLoading={isLoading}
+          isSuccess={isSuccess}
+          className="mt-12"
         >
           Save Preferences
-        </button>
+        </Button>
+        {responseMessage && (
+          <Message
+            type={isSuccess ? "success" : "error"}
+            message={responseMessage}
+          />
+        )}
       </fieldset>
     </form>
   );
