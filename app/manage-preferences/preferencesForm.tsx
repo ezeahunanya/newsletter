@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
+import Button from "../components/ui/button";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 const managePreferencesPath = process.env.NEXT_PUBLIC_MANAGE_PREFERENCES_PATH;
@@ -18,7 +19,6 @@ interface PreferencesFormProps {
   initialPreferences: {
     promotions: boolean;
     updates: boolean;
-    unsubscribeAll: boolean;
   };
   token: string;
 }
@@ -26,22 +26,18 @@ interface PreferencesFormProps {
 interface FormValues {
   promotions: boolean;
   updates: boolean;
-  unsubscribeAll: boolean;
 }
 
 export default function PreferencesForm({
   initialPreferences,
   token,
 }: PreferencesFormProps) {
-  // Using React Hook Form
   const { register, handleSubmit, setValue, watch } = useForm<FormValues>({
     defaultValues: initialPreferences,
   });
 
-  // Watch current values
   const currentValues = watch();
 
-  // Handle form submission
   const onSubmit = async (data: FormValues) => {
     try {
       const response = await fetch(
@@ -67,28 +63,15 @@ export default function PreferencesForm({
     }
   };
 
+  const handleUnsubscribeAll = () => {
+    setValue("promotions", false);
+    setValue("updates", false);
+  };
+
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
 
-    // Assert name as one of the allowed types
-    const fieldName = name as "promotions" | "updates" | "unsubscribeAll";
-
-    if (name === "unsubscribeAll") {
-      if (checked) {
-        console.log(currentValues);
-        // Unsubscribe from all, overriding others
-        setValue("promotions", false);
-        setValue("updates", false);
-        console.log(currentValues);
-      }
-      setValue(fieldName, checked);
-    } else {
-      if (checked) {
-        // Uncheck "unsubscribeAll" if any specific preference is selected
-        setValue("unsubscribeAll", false);
-      }
-      setValue(fieldName, checked);
-    }
+    setValue(name as "promotions" | "updates", checked);
   };
 
   return (
@@ -177,44 +160,15 @@ export default function PreferencesForm({
             </div>
           </div>
 
-          {/* Unsubscribe All Checkbox */}
-          <div className="flex gap-3 border-t border-gray-300 pt-6 dark:border-gray-700">
-            <div className="flex h-6 shrink-0 items-center">
-              <div className="group grid size-4 grid-cols-1">
-                <input
-                  id="unsubscribeAll"
-                  type="checkbox"
-                  {...register("unsubscribeAll")}
-                  onChange={handleCheckboxChange}
-                  checked={watch("unsubscribeAll")}
-                  className="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:focus-visible:outline-indigo-500"
-                />
-                <svg
-                  fill="none"
-                  viewBox="0 0 14 14"
-                  className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white"
-                >
-                  <path
-                    d="M3 8L6 11L11 3.5"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={`opacity-0 ${
-                      currentValues.unsubscribeAll ? "opacity-100" : ""
-                    }`}
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="text-sm/6">
-              <label
-                htmlFor="unsubscribeAll"
-                className="font-medium text-gray-900 dark:text-gray-300"
-              >
-                Unsubscribe From All
-              </label>
-            </div>
-          </div>
+          {/* Unsubscribe All Button */}
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleUnsubscribeAll}
+            disabled={!watch("updates") && !watch("promotions")}
+          >
+            Unsubscribe From All
+          </Button>
         </div>
 
         <button
