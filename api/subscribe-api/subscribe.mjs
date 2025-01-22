@@ -27,7 +27,6 @@ export const handleSubscription = async (
         JSON.stringify({
           updates: true,
           promotions: true,
-          unsubscribeAll: false,
         }),
       ],
     );
