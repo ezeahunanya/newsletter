@@ -41,23 +41,33 @@ export async function handleManagePreferences(
       body: JSON.stringify({ preferences }),
     };
   } else if (method === "POST") {
-    const { preferences } = JSON.parse(event.body);
+    const preferences = JSON.parse(event.body);
 
-    if (!preferences) {
-      throw new Error("Preferences are required.");
+    if (
+      typeof preferences.updates === "undefined" ||
+      typeof preferences.promotions === "undefined"
+    ) {
+      throw new Error(
+        "Both 'updates' and 'promotions' preferences must be provided.",
+      );
     }
 
-    if (!preferences.updates && !preferences.promotions) {
+    // Ensure preferences object is always well-formed
+    const updatedPreferences = {
+      promotions: preferences.promotions ?? false,
+      updates: preferences.updates ?? false,
+    };
+
+    if (!updatedPreferences.updates && !updatedPreferences.promotions) {
       // Unsubscribe from all
       const updateQuery = `
         UPDATE ${subscriberTableName}
         SET subscribed = false,
-            unsubscribe_time = NOW(),
-            preferences = jsonb_set(preferences, '{promotions}', 'false', true)
-                          || jsonb_set(preferences, '{updates}', 'false', true)
-        WHERE id = $1;
+            unsubscribed_at = NOW(),
+            preferences = $1
+        WHERE id = $2;
       `;
-      await client.query(updateQuery, [user_id]);
+      await client.query(updateQuery, [updatedPreferences, user_id]);
 
       return {
         statusCode: 200,
@@ -66,15 +76,16 @@ export async function handleManagePreferences(
         }),
       };
     } else {
-      // Update specific preferences and resubscribe
+      // Update preferences and subscribe if needed
+      const newPreferences = JSON.stringify(updatedPreferences);
       const updateQuery = `
         UPDATE ${subscriberTableName}
         SET preferences = $1,
             subscribed = true,
-            unsubscribe_time = NULL
+            unsubscribed_at = NULL
         WHERE id = $2;
       `;
-      await client.query(updateQuery, [preferences, user_id]);
+      await client.query(updateQuery, [newPreferences, user_id]);
 
       return {
         statusCode: 200,
