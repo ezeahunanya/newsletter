@@ -1,8 +1,7 @@
 import { getDbCredentials, connectToDatabase } from "./db.mjs";
 import { handleSubscription } from "./subscribe.mjs";
-import { verifyEmail } from "./verify.mjs";
-import { handleAddNames } from "./addNames.mjs";
-import { validateToken } from "./validateToken.mjs";
+import { handleVerifyEmail } from "./verifyEmail.mjs";
+import { handleCompleteAccount } from "./completeAccount.mjs";
 import { handleManagePreferences } from "./managePreferences.mjs";
 
 const {
@@ -37,102 +36,35 @@ export const handler = async (event) => {
     client = await connectToDatabase(dbCredentials);
 
     if (normalizedPath === "/subscribe") {
-      const { email } = JSON.parse(event.body);
-
-      if (!email) {
-        throw new Error("Email is required.");
-      }
-
-      const result = await handleSubscription(
+      return await handleSubscription(
         client,
+        event,
         subscriberTableName,
         tokenTableName,
-        email,
         frontendUrl,
-        configurationSet,
+        configurationSet
       );
-
-      return {
-        statusCode: 200,
-        body: JSON.stringify(result),
-      };
     } else if (normalizedPath === "/verify-email") {
-      const { token } = event.queryStringParameters;
-
-      if (!token) {
-        throw new Error("Token is required.");
-      }
-
-      const result = await verifyEmail(
+      return await handleVerifyEmail(
         client,
+        event,
         tokenTableName,
         subscriberTableName,
-        configurationSet,
-        token,
+        configurationSet
       );
-
-      return {
-        statusCode: 200,
-        body: JSON.stringify(result),
-      };
     } else if (normalizedPath === "/complete-account") {
-      const method = event.requestContext.http.method; // Check the HTTP method (GET or POST)
-
-      if (method === "GET") {
-        const { token } = event.queryStringParameters;
-
-        if (!token) {
-          throw new Error("Token is required.");
-        }
-
-        const result = await validateToken(
-          client,
-          tokenTableName,
-          token,
-          "account_completion",
-        );
-
-        return {
-          statusCode: 200,
-          body: JSON.stringify(result),
-        };
-      } else if (method === "POST") {
-        const { token } = event.queryStringParameters;
-        const { firstName, lastName } = JSON.parse(event.body);
-
-        if (!token) {
-          throw new Error("Token is required.");
-        }
-
-        if (!firstName) {
-          throw new Error("First name is required.");
-        }
-
-        const result = await handleAddNames(
-          client,
-          tokenTableName,
-          subscriberTableName,
-          token,
-          firstName,
-          lastName,
-        );
-
-        return {
-          statusCode: 200,
-          body: JSON.stringify(result),
-        };
-      } else {
-        return {
-          statusCode: 405,
-          body: JSON.stringify({ error: "Method Not Allowed" }),
-        };
-      }
+      return await handleCompleteAccount(
+        client,
+        event,
+        tokenTableName,
+        subscriberTableName
+      );
     } else if (normalizedPath === "/manage-preferences") {
       return await handleManagePreferences(
         client,
         event,
         tokenTableName,
-        subscriberTableName,
+        subscriberTableName
       );
     }
 
