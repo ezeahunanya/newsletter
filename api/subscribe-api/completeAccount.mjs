@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { validateToken } from "./validateToken.mjs";
 
-export const handleAddNames = async (
+export const handleCompleteAccount = async (
   client,
   tokenTableName,
   subscriberTableName,

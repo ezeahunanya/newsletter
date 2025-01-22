@@ -3,7 +3,7 @@ import { generateUniqueToken } from "./generateUniqueToken.mjs";
 import { validateToken } from "./validateToken.mjs";
 import { sendWelcomeEmail } from "./email.mjs";
 
-export const verifyEmail = async (
+export const handleVerifyEmail = async (
   client,
   tokenTableName,
   subscriberTableName,
