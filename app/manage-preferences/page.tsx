@@ -37,10 +37,6 @@ export default async function PreferencesPage({
   }
 
   const preferencesData = await getPreferences(token);
-  const initialPreferences =
-    typeof preferencesData.data.preferences === "string"
-      ? JSON.parse(preferencesData.data.preferences)
-      : preferencesData.data.preferences;
 
   if (preferencesData.error) {
     return (
@@ -61,6 +57,11 @@ export default async function PreferencesPage({
       </div>
     );
   }
+
+  const initialPreferences =
+    typeof preferencesData.data.preferences === "string"
+      ? JSON.parse(preferencesData.data.preferences)
+      : preferencesData.data.preferences;
 
   return (
     <div>
