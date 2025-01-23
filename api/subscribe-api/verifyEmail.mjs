@@ -8,6 +8,7 @@ export const handleVerifyEmail = async (
   event,
   tokenTableName,
   subscriberTableName,
+  frontendUrlBase,
   configurationSet,
 ) => {
   const method = event.requestContext.http.method;
@@ -73,8 +74,8 @@ export const handleVerifyEmail = async (
     );
 
     // Send the welcome email with both URLs
-    const accountCompletionUrl = `${process.env.FRONTEND_DOMAIN_URL_DEV}/complete-account?token=${accountCompletionToken}`;
-    const preferencesUrl = `${process.env.FRONTEND_DOMAIN_URL_DEV}/manage-preferences?token=${preferencesToken}`;
+    const accountCompletionUrl = `${frontendUrlBase}/complete-account?token=${accountCompletionToken}`;
+    const preferencesUrl = `${frontendUrlBase}/manage-preferences?token=${preferencesToken}`;
     await sendWelcomeEmail(
       email,
       accountCompletionUrl,

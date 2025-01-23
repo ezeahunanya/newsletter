@@ -51,6 +51,7 @@ export const handler = async (event) => {
         event,
         tokenTableName,
         subscriberTableName,
+        frontendUrl,
         configurationSet,
       );
     } else if (normalizedPath === "/complete-account") {
