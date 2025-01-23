@@ -3,6 +3,7 @@ import { handleSubscription } from "./subscribe.mjs";
 import { handleVerifyEmail } from "./verifyEmail.mjs";
 import { handleCompleteAccount } from "./completeAccount.mjs";
 import { handleManagePreferences } from "./managePreferences.mjs";
+import { handleRegenerateToken } from "./regenerateToken.mjs";
 
 const {
   TABLE_NAME_DEV,
@@ -42,7 +43,7 @@ export const handler = async (event) => {
         subscriberTableName,
         tokenTableName,
         frontendUrl,
-        configurationSet
+        configurationSet,
       );
     } else if (normalizedPath === "/verify-email") {
       return await handleVerifyEmail(
@@ -50,21 +51,28 @@ export const handler = async (event) => {
         event,
         tokenTableName,
         subscriberTableName,
-        configurationSet
+        configurationSet,
       );
     } else if (normalizedPath === "/complete-account") {
       return await handleCompleteAccount(
         client,
         event,
         tokenTableName,
-        subscriberTableName
+        subscriberTableName,
       );
     } else if (normalizedPath === "/manage-preferences") {
       return await handleManagePreferences(
         client,
         event,
         tokenTableName,
-        subscriberTableName
+        subscriberTableName,
+      );
+    } else if (normalizedPath === "/regenerate-token") {
+      return await handleRegenerateToken(
+        client,
+        event,
+        tokenTableName,
+        subscriberTableName,
       );
     }
 

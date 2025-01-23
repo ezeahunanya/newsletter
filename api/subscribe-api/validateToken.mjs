@@ -6,15 +6,14 @@ export const validateToken = async (
   token,
   tokenType,
   subscriberTableName = null, // Optional parameter for subscriber table
+  allowExpired = false, // New parameter to handle expired tokens
 ) => {
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-  // Dynamically construct the JOIN clause if the subscriber table is provided
   const joinClause = subscriberTableName
     ? `JOIN ${subscriberTableName} s ON t.user_id = s.id`
     : "";
 
-  // Dynamically select additional fields if the subscriber table is used
   const additionalFields = subscriberTableName ? ", s.email" : "";
 
   const tokenQuery = `
@@ -42,10 +41,14 @@ export const validateToken = async (
   }
 
   if (tokenType !== "preferences") {
-    if (new Date() > new Date(expires_at)) {
+    if (!allowExpired && new Date() > new Date(expires_at)) {
       throw new Error("Token has expired.");
     }
   }
 
-  return { ...additionalFieldsResult, message: "Token is valid." };
+  return {
+    ...additionalFieldsResult,
+    isExpired: new Date() > new Date(expires_at),
+    message: "Token is valid.",
+  };
 };
