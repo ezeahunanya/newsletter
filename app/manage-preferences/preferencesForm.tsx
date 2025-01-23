@@ -44,9 +44,9 @@ export default function PreferencesForm({
   const currentValues = watch();
 
   const onSubmit = async (data: FormValues) => {
-    setIsLoading(true); // Start loading state
-    setIsSuccess(false); // Reset success state before making the request
-    setResponseMessage(""); // Reset response message
+    setIsLoading(true);
+    setIsSuccess(null);
+    setResponseMessage("");
 
     try {
       const response = await fetch(
