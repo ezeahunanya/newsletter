@@ -83,3 +83,49 @@ export const sendWelcomeEmail = async (
 
   await sesClient.send(new SendEmailCommand(emailParams));
 };
+
+export const sendRegeneratedTokenEmail = async (
+  email,
+  link,
+  configurationSet,
+  origin,
+) => {
+  const sesClient = getSESClient();
+
+  // Dynamic text based on the origin
+  const subject =
+    origin === "verify-email"
+      ? "Here's your new email verification link"
+      : "Here's your new account completion link";
+
+  const body =
+    origin === "verify-email"
+      ? `
+      <p>Hey,</p>
+      <p>It seems like your previous email verification link has expired. Click the link below to verify your email address:</p>
+      <p><a href="${link}">Verify Email</a></p>
+      <p>If you did not request this, you can safely ignore this email.</p>
+      <p>Thanks,</p>
+      <p>Eze</p>
+    `
+      : `
+      <p>Hey,</p>
+      <p>It seems like your previous account completion link has expired. Click the link below to complete your account setup:</p>
+      <p><a href="${link}">Complete Account</a></p>
+      <p>If you did not request this, you can safely ignore this email.</p>
+      <p>Thanks,</p>
+      <p>Eze</p>
+    `;
+
+  const emailParams = {
+    Destination: { ToAddresses: [email] },
+    Message: {
+      Body: { Html: { Data: `<html><body>${body}</body></html>` } },
+      Subject: { Data: subject },
+    },
+    Source: process.env.SES_SOURCE_EMAIL,
+    ConfigurationSetName: configurationSet,
+  };
+
+  await sesClient.send(new SendEmailCommand(emailParams));
+};
