@@ -49,16 +49,11 @@ export default function PreferencesForm({
     setResponseMessage("");
 
     try {
-      const response = await fetch(
-        `${managePreferencesUrl}?token=${encodeURIComponent(token)}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        },
-      );
+      const response = await fetch(managePreferencesUrl, {
+        method: "POST",
+        headers: { "x-token": token, "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
       const responseData = await response.json();
 

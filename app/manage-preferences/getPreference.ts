@@ -11,15 +11,10 @@ const managePreferencesUrl = `${apiBaseUrl}${managePreferencesPath}`;
 
 export async function getPreferences(token: string) {
   try {
-    const response = await fetch(
-      `${managePreferencesUrl}?token=${encodeURIComponent(token)}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
+    const response = await fetch(managePreferencesUrl, {
+      method: "GET",
+      headers: { "x-token": token, "Content-Type": "application/json" },
+    });
 
     if (!response.ok) {
       const errorData = await response.json();

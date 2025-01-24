@@ -7,7 +7,7 @@ export async function handleManagePreferences(
   subscriberTableName,
 ) {
   const method = event.requestContext.http.method; // Check the HTTP method (GET or POST)
-  const { token } = event.queryStringParameters;
+  const token = event.headers["x-token"];
 
   if (!token) {
     throw new Error("Token is required.");
