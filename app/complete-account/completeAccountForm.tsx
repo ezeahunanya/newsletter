@@ -52,16 +52,14 @@ export default function CompleteAccountForm({
     };
 
     try {
-      const response = await fetch(
-        `${completeAccountUrl}?token=${encodeURIComponent(token)}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(processedData),
+      const response = await fetch(completeAccountUrl, {
+        method: "POST",
+        headers: {
+          "x-token": token,
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify(processedData),
+      });
 
       const responseData = await response.json();
 

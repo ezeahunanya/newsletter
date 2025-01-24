@@ -28,7 +28,7 @@ export const handleCompleteAccount = async (
       body: JSON.stringify(result),
     };
   } else if (method === "POST") {
-    const { token } = event.queryStringParameters;
+    const token = event.headers["x-token"];
     const { firstName, lastName } = JSON.parse(event.body);
 
     if (!token || !firstName) {
