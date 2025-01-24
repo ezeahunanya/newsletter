@@ -24,7 +24,7 @@ const Button: React.FC<ButtonProps> = ({
       "bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-500 dark:hover:bg-indigo-400 text-white":
         variant === "primary" && !disabled && !isLoading && isSuccess === null,
       // Secondary button styles
-      "bg-white/50 dark:bg-white/10 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-white/20":
+      "bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white hover:bg-white/50 dark:hover:bg-white/20":
         variant === "secondary" &&
         !disabled &&
         !isLoading &&
