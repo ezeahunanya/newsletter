@@ -16,6 +16,14 @@ if (!apiBaseUrl || !completeAccountPath) {
 
 const completeAccountUrl = `${apiBaseUrl}${completeAccountPath}`;
 
+// Utility function to capitalise names
+const capitaliseName = (name: string) =>
+  name
+    .trim()
+    .replace(/\s+/g, " ") // Replace multiple spaces with a single space
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalise each word
+
 interface FormData {
   firstName: string;
   lastName?: string | null;
@@ -46,9 +54,10 @@ export default function CompleteAccountForm({
     setIsSuccess(null);
     setResponseMessage("");
 
+    // Normalize and capitalise the names
     const processedData = {
-      ...data,
-      lastName: data.lastName || null, // Convert undefined to null
+      firstName: capitaliseName(data.firstName),
+      lastName: data.lastName ? capitaliseName(data.lastName) : null,
     };
 
     try {
