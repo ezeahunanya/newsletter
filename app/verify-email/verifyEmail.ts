@@ -12,7 +12,7 @@ const verifyEmailUrl = `${apiBaseUrl}${verifyEmailPath}`;
 export async function verifyToken(token: string) {
   try {
     const response = await fetch(verifyEmailUrl, {
-      method: "GET",
+      method: "POST",
       headers: {
         "x-token": token,
         "Content-Type": "application/json",

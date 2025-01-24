@@ -13,7 +13,7 @@ export const handleVerifyEmail = async (
 ) => {
   const method = event.requestContext.http.method;
 
-  if (method === "GET") {
+  if (method === "POST") {
     const token = event.headers["x-token"];
 
     if (!token) {
