@@ -2,8 +2,6 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 const regenerateTokenPath = process.env.NEXT_PUBLIC_REGENERATE_TOKEN_PATH;
 
 if (!apiBaseUrl || !regenerateTokenPath) {
-    console.log("baseurl:", apiBaseUrl)
-    console.log("regenerate path:", regenerateTokenPath)
   throw new Error(
     "API base URL or regenerate token path is not defined in environment variables.",
   );
