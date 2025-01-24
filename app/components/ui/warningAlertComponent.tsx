@@ -9,11 +9,13 @@ import Message from "./message";
 interface WarningAlertComponentProps {
   token: string;
   error: string;
+  origin: string;
 }
 
 export default function WarningAlertComponent({
   token,
   error,
+  origin,
 }: WarningAlertComponentProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
@@ -25,7 +27,7 @@ export default function WarningAlertComponent({
     setResponseMessage("");
 
     try {
-      const response = await regenerateToken(token, "verify-email");
+      const response = await regenerateToken(token, origin);
       const responseData = await response.json();
 
       if (response.ok) {

@@ -24,7 +24,13 @@ export default async function VerifyEmailPage({
   const result = await verifyToken(token);
 
   if (result.error) {
-    return <WarningAlertComponent token={token} error={result.error} />;
+    return (
+      <WarningAlertComponent
+        token={token}
+        error={result.error}
+        origin="verify-email"
+      />
+    );
   }
 
   return (
