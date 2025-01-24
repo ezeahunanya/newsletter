@@ -10,7 +10,7 @@ export const handleCompleteAccount = async (
   const method = event.requestContext.http.method;
 
   if (method === "GET") {
-    const { token } = event.queryStringParameters;
+    const token = event.headers["x-token"];
 
     if (!token) {
       throw new Error("Token is required.");

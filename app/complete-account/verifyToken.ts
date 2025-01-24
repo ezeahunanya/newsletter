@@ -11,15 +11,13 @@ const completeAccountUrl = `${apiBaseUrl}${completeAccountPath}`;
 
 export async function verifyToken(token: string) {
   try {
-    const response = await fetch(
-      `${completeAccountUrl}?token=${encodeURIComponent(token)}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+    const response = await fetch(completeAccountUrl, {
+      method: "GET",
+      headers: {
+        "x-token": token,
+        "Content-Type": "application/json",
       },
-    );
+    });
 
     if (!response.ok) {
       const errorData = await response.json();
