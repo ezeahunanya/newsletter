@@ -1,8 +1,8 @@
 import { validateToken } from "./validateToken.mjs";
-import { generateUniqueToken } from "./generateToken.mjs";
+import { generateUniqueToken } from "./generateUniqueToken.mjs";
 import { sendRegeneratedTokenEmail } from "./email.mjs";
 
-export const regenerateToken = async (
+export const handleRegenerateToken = async (
   client,
   event,
   tokenTableName,
