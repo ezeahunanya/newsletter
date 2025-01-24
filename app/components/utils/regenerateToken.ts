@@ -3,7 +3,7 @@ const regenerateTokenPath = process.env.NEXT_PUBLIC_REGENERATE_TOKEN_PATH;
 
 if (!apiBaseUrl || !regenerateTokenPath) {
   throw new Error(
-    "API base URL or complete account path is not defined in environment variables.",
+    "API base URL or regenerate token path is not defined in environment variables.",
   );
 }
 
