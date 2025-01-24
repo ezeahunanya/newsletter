@@ -1,25 +1,20 @@
 "use client";
 
-import { Metadata } from "next";
 import { useState } from "react";
-import Alert from "../components/ui/alert";
-import Button from "../components/ui/button";
-import { regenerateToken } from "../components/utils/regenerateToken";
-import Message from "../components/ui/message";
+import Alert from "./alert";
+import Button from "./button";
+import { regenerateToken } from "../utils/regenerateToken";
+import Message from "./message";
 
-export const metadata: Metadata = {
-  title: "Verify Email",
-};
-
-interface VerifyEmailComponentProps {
+interface WarningAlertComponentProps {
   token: string;
   error: string;
 }
 
-export default function VerifyEmailComponent({
+export default function WarningAlertComponent({
   token,
   error,
-}: VerifyEmailComponentProps) {
+}: WarningAlertComponentProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState<boolean | null>(null);
   const [responseMessage, setResponseMessage] = useState("");

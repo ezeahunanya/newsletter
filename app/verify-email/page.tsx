@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import VerifyEmailComponent from "./verifyEmailComponent";
+import WarningAlertComponent from "../components/ui/warningAlertComponent";
 import { verifyToken } from "./verifyEmail";
 import Alert from "../components/ui/alert";
 
@@ -24,7 +24,7 @@ export default async function VerifyEmailPage({
   const result = await verifyToken(token);
 
   if (result.error) {
-    return <VerifyEmailComponent token={token} error={result.error} />;
+    return <WarningAlertComponent token={token} error={result.error} />;
   }
 
   return (
