@@ -166,14 +166,12 @@ export default function PreferencesForm({
         </div>
 
         {/* Submit Button */}
-        <Button
-          type="submit"
-          isLoading={isLoading}
-          isSuccess={isSuccess}
-          className="mt-12"
-        >
-          Save Preferences
-        </Button>
+        <div className="mt-12 flex justify-end">
+          <Button type="submit" isLoading={isLoading} isSuccess={isSuccess}>
+            Save Preferences
+          </Button>
+        </div>
+
         {responseMessage && (
           <Message
             type={isSuccess ? "success" : "error"}
