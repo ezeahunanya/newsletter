@@ -33,10 +33,5 @@ export default async function VerifyEmailPage({
     );
   }
 
-  return (
-    <Alert
-      type="success"
-      message="Your email has been successfully verified!"
-    />
-  );
+  return <Alert type="success" message={result.data.message} />;
 }
