@@ -1,26 +1,25 @@
 import { Metadata } from "next";
-import WarningAlertComponent from "../components/ui/warningAlertComponent";
-import { verifyToken } from "./verifyEmail";
+import CompleteAccountForm from "./completeAccountForm";
+import { verifyToken } from "./verifyToken";
 import Alert from "../components/ui/alert";
+import WarningAlertComponent from "../components/ui/warningAlertComponent";
 
 export const metadata: Metadata = {
-  title: "Verify Email",
+  title: "Complete Account",
 };
 
-interface VerifyEmailPageProps {
+interface CompleteAccountProps {
   searchParams: Promise<{ token?: string }>;
 }
 
-export default async function VerifyEmailPage({
+export default async function CompleteAccountPage({
   searchParams,
-}: VerifyEmailPageProps) {
+}: CompleteAccountProps) {
   const { token } = await searchParams;
 
-  if (!token) {
+  if (!token)
     return <Alert type="error" message="Invalid request: Token is missing." />;
-  }
 
-  // Simulate API call to verify token
   const result = await verifyToken(token);
 
   if (result.error) {
@@ -28,10 +27,14 @@ export default async function VerifyEmailPage({
       <WarningAlertComponent
         token={token}
         error={result.error}
-        origin="verify-email"
+        origin="complete-account"
       />
     );
   }
 
-  return <Alert type="success" message={result.data.message} />;
+  return (
+    <div>
+      <CompleteAccountForm token={token} />
+    </div>
+  );
 }

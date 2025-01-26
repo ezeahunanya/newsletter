@@ -1,18 +1,18 @@
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-const verifyEmailPath = process.env.NEXT_PUBLIC_VERIFY_EMAIL_PATH;
+const completeAccountPath = process.env.NEXT_PUBLIC_COMPLETE_ACCOUNT_PATH;
 
-if (!apiBaseUrl || !verifyEmailPath) {
+if (!apiBaseUrl || !completeAccountPath) {
   throw new Error(
-    "API base URL or verify email path is not defined in environment variables.",
+    "API base URL or complete account path is not defined in environment variables.",
   );
 }
 
-const verifyEmailUrl = `${apiBaseUrl}${verifyEmailPath}`;
+const completeAccountUrl = `${apiBaseUrl}${completeAccountPath}`;
 
 export async function verifyToken(token: string) {
   try {
-    const response = await fetch(verifyEmailUrl, {
-      method: "POST",
+    const response = await fetch(completeAccountUrl, {
+      method: "GET",
       headers: {
         "x-token": token,
         "Content-Type": "application/json",
@@ -21,7 +21,8 @@ export async function verifyToken(token: string) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      return { error: errorData.error || "Verification failed." };
+      console.log(errorData);
+      return { error: errorData.error || "Link invalid." };
     }
 
     const data = await response.json();
