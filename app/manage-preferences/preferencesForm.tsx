@@ -56,7 +56,7 @@ export default function PreferencesForm({
 
     try {
       const response = await fetch(managePreferencesUrl, {
-        method: "POST",
+        method: "PUT",
         headers: { "x-token": token, "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });

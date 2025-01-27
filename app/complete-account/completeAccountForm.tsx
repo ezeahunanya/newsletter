@@ -62,7 +62,7 @@ export default function CompleteAccountForm({
 
     try {
       const response = await fetch(completeAccountUrl, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "x-token": token,
           "Content-Type": "application/json",
