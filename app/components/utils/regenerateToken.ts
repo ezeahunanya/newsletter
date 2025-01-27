@@ -17,7 +17,7 @@ export const regenerateToken = async (token: string, origin: string) => {
   };
 
   const response = await fetch(regenerateTokenUrl, {
-    method: "POST",
+    method: "PUT",
     headers,
   });
 
