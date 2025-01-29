@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import Button from "../components/ui/button";
-import Message from "../components/ui/message";
+import Button from "../_components/ui/button";
+import Message from "../_components/ui/message";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 const completeAccountPath = process.env.NEXT_PUBLIC_COMPLETE_ACCOUNT_PATH;

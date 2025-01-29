@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import PreferencesForm from "./preferencesForm";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { getPreferences } from "./getPreference";
-import Alert from "../components/ui/alert";
+import Alert from "../_components/ui/alert";
 
 export const metadata: Metadata = {
   title: "Manage Preferences",

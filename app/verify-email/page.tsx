@@ -1,7 +1,7 @@
 import { Metadata } from "next";
-import WarningAlertComponent from "../components/ui/warningAlertComponent";
+import WarningAlertComponent from "../_components/ui/warningAlertComponent";
 import { verifyToken } from "./verifyEmail";
-import Alert from "../components/ui/alert";
+import Alert from "../_components/ui/alert";
 
 export const metadata: Metadata = {
   title: "Verify Email",
