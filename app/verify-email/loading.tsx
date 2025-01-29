@@ -1,4 +1,4 @@
-import Alert from "../components/ui/alert";
+import Alert from "../_components/ui/alert";
 
 // app/verify-email/loading.tsx
 export default function Loading() {
