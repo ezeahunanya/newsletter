@@ -35,14 +35,15 @@ export async function subscribeUser(
       success: true,
       message: "Check your email to confirm your subscription",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     await client.query("ROLLBACK");
     console.error("❌ Transaction failed, rolling back changes:", error);
 
-    if (error.code === "23505") {
+    if (error instanceof Error && error.message.includes("duplicate")) {
       throw new Error("Email already subscribed.");
+    } else {
+      throw new Error("Something went wrong");
     }
-    throw new Error("Something went wrong");
   } finally {
     await client.end();
   }
