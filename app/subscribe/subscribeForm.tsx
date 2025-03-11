@@ -6,17 +6,6 @@ import Button from "../_components/ui/button";
 import Message from "../_components/ui/message";
 import { subscribeUser } from "./actions";
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-const subscribeEmailPath = process.env.NEXT_PUBLIC_SUBSCRIBE_EMAIL_PATH;
-
-if (!apiBaseUrl || !subscribeEmailPath) {
-  throw new Error(
-    "API base URL or verify email path is not defined in environment variables.",
-  );
-}
-
-const subscribeEmailUrl = `${apiBaseUrl}${subscribeEmailPath}`;
-
 type FormValues = {
   email: string;
 };

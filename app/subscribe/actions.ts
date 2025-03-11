@@ -23,7 +23,7 @@ export async function subscribeUser(
 
     await insertVerificationToken(client, userId, tokenHash, expiresAt);
 
-    const verificationUrl = `${process.env.FRONTEND_DOMAIN_URL}/verify-email?token=${token}`;
+    //const verificationUrl = `${process.env.FRONTEND_DOMAIN_URL}/verify-email?token=${token}`;
     // TODO: Send email with verification URL
 
     // Commit transaction
