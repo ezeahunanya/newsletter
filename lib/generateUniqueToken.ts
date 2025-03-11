@@ -15,6 +15,10 @@ export const generateUniqueToken = async (
 ): Promise<{ token: string; tokenHash: string }> => {
   const TOKEN_TABLE = process.env.TOKEN_TABLE_NAME;
 
+  if (!TOKEN_TABLE) {
+    throw new Error("TOKEN_TABLE_NAME environment variable is not set.");
+  }
+
   for (let retries = 0; retries < maxRetries; retries++) {
     const token = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
