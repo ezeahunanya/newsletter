@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +32,8 @@ export default function RootLayout({
         <div className="relative isolate min-h-screen overflow-hidden bg-gray-100 py-16 sm:py-24 lg:py-32 dark:bg-gray-900">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             {children}
+            <Analytics />
+            <SpeedInsights />
             <div
               aria-hidden="true"
               className="absolute left-1/2 top-0 -z-10 -translate-x-1/2 blur-3xl xl:-top-6"
