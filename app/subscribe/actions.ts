@@ -1,63 +1,54 @@
-import { generateUniqueToken } from "@/lib/generateUniqueToken";
-import { NextResponse } from "next/server";
-import { Client } from "@neondatabase/serverless";
+"use server";
 
-export async function POST(req: Request, ctx: any) {
+import { Client } from "@neondatabase/serverless";
+import { generateUniqueToken } from "@/lib/generateUniqueToken";
+
+export async function subscribeUser(
+  formData: FormData,
+): Promise<{ success: boolean; message: string }> {
+  const email = formData.get("email") as string;
+  if (!email) throw new Error("Email is required");
+
   const client = new Client(process.env.DATABASE_URL);
   await client.connect();
-  console.log("✅ Database connection established.");
 
-  const { email } = await req.json();
-  if (!email)
-    return NextResponse.json({ error: "Email is required" }, { status: 400 });
-
-  let userId;
   try {
+    // Start transaction
     await client.query("BEGIN");
     console.log("🔄 Database transaction started.");
 
-    userId = await insertSubscriber(client, email);
+    const userId = await insertSubscriber(client, email);
     const { token, tokenHash } = await generateUniqueToken(client);
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // Token expiration in 24 hours.
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24-hour expiration
 
     await insertVerificationToken(client, userId, tokenHash, expiresAt);
 
-    // ✅ Email queueing (inside the transaction)
     const verificationUrl = `${process.env.FRONTEND_DOMAIN_URL}/verify-email?token=${token}`;
+    // TODO: Send email with verification URL
 
+    // Commit transaction
     await client.query("COMMIT");
     console.log("✅ Subscription transaction committed successfully.");
-    return NextResponse.json({
+
+    return {
+      success: true,
       message: "Check your email to confirm your subscription",
-    });
+    };
   } catch (error: any) {
     await client.query("ROLLBACK");
     console.error("❌ Transaction failed, rolling back changes:", error);
 
     if (error.code === "23505") {
-      console.warn("⚠️ Duplicate email detected: Email already subscribed.");
-      return NextResponse.json(
-        { error: "Email already subscribed." },
-        { status: 500 },
-      );
-    } else {
-      return NextResponse.json(
-        { error: "Something went wrong" },
-        { status: 500 },
-      );
+      throw new Error("Email already subscribed.");
     }
+    throw new Error("Something went wrong");
   } finally {
-    ctx.waitUntil(client.end());
+    await client.end();
   }
-  //await sendVerificationEmail(email, token);
 }
 
 /**
  * Inserts a new subscriber into the database.
- *
- * @param {Client} client - Database client.
- * @param {string} email - Subscriber's email.
- * @returns {Promise<number>} - Subscriber ID.
  */
 const insertSubscriber = async (
   client: Client,
@@ -66,11 +57,11 @@ const insertSubscriber = async (
   console.log(`🔄 Adding new subscriber with email: ${email}`);
   const result = await client.query(
     `
-    INSERT INTO ${process.env.SUBSCRIBERS_TABLE_NAME} 
-    (email, subscribed, subscribed_at, email_verified, preferences)
-    VALUES ($1, true, NOW(), false, $2) 
-    RETURNING id;
-    `,
+      INSERT INTO ${process.env.SUBSCRIBERS_TABLE_NAME} 
+      (email, preferences)
+      VALUES ($1, $2) 
+      RETURNING id;
+      `,
     [email, JSON.stringify({ updates: true, promotions: true })],
   );
 
@@ -85,11 +76,6 @@ const insertSubscriber = async (
 
 /**
  * Inserts a verification token into the database.
- *
- * @param {Client} client - Database client.
- * @param {number} userId - Subscriber ID.
- * @param {string} tokenHash - Hashed token.
- * @param {Date} expiresAt - Token expiration date.
  */
 const insertVerificationToken = async (
   client: Client,
@@ -100,10 +86,10 @@ const insertVerificationToken = async (
   console.log(`🔄 Adding verification token for user ID: ${userId}`);
   await client.query(
     `
-    INSERT INTO ${process.env.TOKEN_TABLE_NAME} 
-    (user_id, token_hash, token_type, expires_at, used, created_at, updated_at)
-    VALUES ($1, $2, 'email_verification', $3, false, NOW(), NOW());
-    `,
+      INSERT INTO ${process.env.TOKEN_TABLE_NAME} 
+      (user_id, token_hash, token_type, expires_at, used, created_at, updated_at)
+      VALUES ($1, $2, 'email_verification', $3, false, NOW(), NOW());
+      `,
     [userId, tokenHash, expiresAt],
   );
   console.log("✅ Verification token added successfully.");

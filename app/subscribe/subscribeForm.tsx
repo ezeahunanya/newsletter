@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Button from "../_components/ui/button";
 import Message from "../_components/ui/message";
+import { subscribeUser } from "./actions";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 const subscribeEmailPath = process.env.NEXT_PUBLIC_SUBSCRIBE_EMAIL_PATH;
@@ -39,29 +40,20 @@ export default function SubscribeForm() {
     setResponseMessage("");
 
     try {
-      const response = await fetch(subscribeEmailUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: data.email }),
-      });
+      const formData = new FormData();
+      formData.append("email", data.email);
 
-      const responseData = await response.json();
+      // Call the subscribeUser server action and wait for the result
+      const response = await subscribeUser(formData);
 
-      if (response.ok) {
-        setIsSuccess(true);
-        setResponseMessage(responseData.message);
-      } else {
-        setIsSuccess(false);
-        setResponseMessage(
-          responseData.error || "Failed to subscribe. Please try again.",
-        );
-      }
+      setIsSuccess(true);
+      setResponseMessage(response.message);
     } catch (error) {
       console.error("Error:", error);
       setIsSuccess(false);
-      setResponseMessage("An error occurred. Please try again.");
+      setResponseMessage(
+        String(error) || "Failed to subscribe. Please try again.",
+      );
     } finally {
       setIsLoading(false);
       setTimeout(() => {
