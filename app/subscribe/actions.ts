@@ -7,7 +7,12 @@ export async function subscribeUser(
   formData: FormData,
 ): Promise<{ success: boolean; message: string }> {
   const email = formData.get("email") as string;
-  if (!email) throw new Error("Email is required");
+  if (!email) {
+    return {
+      success: false,
+      message: "Email is required",
+    };
+  }
 
   const client = new Client(process.env.DATABASE_URL);
   await client.connect();
@@ -40,9 +45,15 @@ export async function subscribeUser(
     console.error("❌ Transaction failed, rolling back changes:", error);
 
     if (error instanceof Error && error.message.includes("duplicate")) {
-      throw new Error("Email already subscribed.");
+      return {
+        success: false,
+        message: "Email already subscribed.",
+      };
     } else {
-      throw new Error("Something went wrong");
+      return {
+        success: false,
+        message: "Failed to subscribe. Please try again.",
+      };
     }
   } finally {
     await client.end();

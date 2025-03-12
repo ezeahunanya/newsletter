@@ -28,28 +28,19 @@ export default function SubscribeForm() {
     setIsSuccess(null);
     setResponseMessage("");
 
-    try {
-      const formData = new FormData();
-      formData.append("email", data.email);
+    const formData = new FormData();
+    formData.append("email", data.email);
 
-      // Call the subscribeUser server action and wait for the result
-      const response = await subscribeUser(formData);
+    const response = await subscribeUser(formData);
 
-      setIsSuccess(true);
-      setResponseMessage(response.message);
-    } catch (error) {
-      console.error("Error:", error);
-      setIsSuccess(false);
-      setResponseMessage(
-        String(error) || "Failed to subscribe. Please try again.",
-      );
-    } finally {
-      setIsLoading(false);
-      setTimeout(() => {
-        setIsSuccess(null);
-        setResponseMessage("");
-      }, 5000);
-    }
+    setIsSuccess(response.success);
+    setResponseMessage(response.message);
+
+    setIsLoading(false);
+    setTimeout(() => {
+      setIsSuccess(null);
+      setResponseMessage("");
+    }, 5000);
   };
 
   return (
