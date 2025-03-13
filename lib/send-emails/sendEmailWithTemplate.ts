@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 
 // Configure Nunjucks for rendering templates
 const configureNunjucks = () => {
-  const templatesPath = path.resolve(__dirname, "emailTemplates");
+  const templatesPath = path.resolve(__dirname, "./emailTemplates");
   nunjucks.configure(templatesPath, { autoescape: true });
 };
 
