@@ -6,7 +6,7 @@ import { Client } from "@microsoft/microsoft-graph-client";
 
 const emailClient = Client.initWithMiddleware({
   authProvider: {
-    getAccessToken: getAccessToken,
+    getAccessToken,
   },
 });
 
@@ -45,8 +45,7 @@ const sendEmailViaOutlook = async (
       subject: subject,
       from: {
         emailAddress: {
-          name: "Eze's Newsletter", // Display Name
-          address: process.env.OUTLOOK_SENDER_EMAIL, // Email Address
+          address: process.env.OUTLOOK_USER_EMAIL, // Email Address
         },
       },
       body: {
@@ -67,8 +66,7 @@ const sendEmailViaOutlook = async (
     const senderEmail = process.env.OUTLOOK_USER_EMAIL;
 
     // Send email using the Graph API
-    const client = emailClient;
-    await client.api(`/users/${senderEmail}/sendMail`).post(emailParams);
+    await emailClient.api(`/users/${senderEmail}/sendMail`).post(emailParams);
     console.log("✅ Email sent successfully!");
   } catch (error) {
     console.error("❌ Error sending email via Outlook:", error);
