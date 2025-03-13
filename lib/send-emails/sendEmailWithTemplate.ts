@@ -1,6 +1,5 @@
 import nunjucks from "nunjucks";
 import path from "path";
-import { fileURLToPath } from "url";
 import { getAccessToken } from "./getAccessToken";
 import { Client } from "@microsoft/microsoft-graph-client";
 
@@ -10,13 +9,9 @@ const emailClient = Client.initWithMiddleware({
   },
 });
 
-// Define __dirname for ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Configure Nunjucks for rendering templates
 const configureNunjucks = () => {
-  const templatesPath = path.resolve(__dirname, "./emailTemplates");
+  const templatesPath = path.resolve(process.cwd(), "emailTemplates");
   nunjucks.configure(templatesPath, { autoescape: true });
 };
 
