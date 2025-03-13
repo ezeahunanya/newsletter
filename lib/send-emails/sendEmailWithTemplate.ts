@@ -1,7 +1,7 @@
 import nunjucks from "nunjucks";
 import path from "path";
 import { fileURLToPath } from "url";
-import { getAccessToken } from "./getAccessToken.js"; // Import updated function
+import { getAccessToken } from "./getAccessToken";
 import { Client } from "@microsoft/microsoft-graph-client";
 
 const emailClient = Client.initWithMiddleware({
