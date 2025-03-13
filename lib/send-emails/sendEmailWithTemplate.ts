@@ -12,6 +12,7 @@ const emailClient = Client.initWithMiddleware({
 // Configure Nunjucks for rendering templates
 const configureNunjucks = () => {
   const templatesPath = path.resolve(process.cwd(), "emailTemplates");
+  console.log(`Configuring Nunjucks with templates path: ${templatesPath}`);
   nunjucks.configure(templatesPath, { autoescape: true });
 };
 
