@@ -22,8 +22,8 @@ export const sendEmailWithTemplate = async (
   subject: string,
 ) => {
   console.log(`Rendering email template: ${templateName} for ${email}...`);
-  configureNunjucks();
-  const emailHtml = nunjucks.render(`${templateName}.html`, context);
+  //configureNunjucks();
+  const emailHtml = nunjucks.render(`/emailTemplates/${templateName}.html`, context);
 
   console.log("Sending email via Outlook (Production)...");
   return await sendEmailViaOutlook(email, subject, emailHtml);
