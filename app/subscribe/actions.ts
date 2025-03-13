@@ -2,6 +2,7 @@
 
 import { Client } from "@neondatabase/serverless";
 import { generateUniqueToken } from "@/lib/generateUniqueToken";
+import { sendVerificationEmail } from "@/lib/send-emails/email";
 
 export async function subscribeUser(
   formData: FormData,
@@ -28,9 +29,8 @@ export async function subscribeUser(
 
     await insertVerificationToken(client, userId, tokenHash, expiresAt);
 
-    console.log("Token:", token);
-    //const verificationUrl = `${process.env.FRONTEND_DOMAIN_URL}/verify-email?token=${token}`;
-    // TODO: Send email with verification URL
+    const verificationUrl = `${process.env.FRONTEND_DOMAIN_URL}/verify-email?token=${token}`;
+    await sendVerificationEmail(email, verificationUrl);
 
     // Commit transaction
     await client.query("COMMIT");
