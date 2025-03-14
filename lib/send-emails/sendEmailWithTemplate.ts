@@ -2,6 +2,24 @@ import nunjucks from "nunjucks";
 import path from "path";
 import { getAccessToken } from "./getAccessToken";
 import { Client } from "@microsoft/microsoft-graph-client";
+import fs from "fs";
+
+const logFiles = (dir: string, depth = 0) => {
+  const files = fs.readdirSync(dir);
+  console.log(`${" ".repeat(depth * 2)}📂 Listing files in: ${dir}`);
+  files.forEach((file) => {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      logFiles(fullPath, depth + 1); // Recursively log subdirectories
+    } else {
+      console.log(`${" ".repeat(depth * 2)}📄 ${file}`);
+    }
+  });
+};
+
+// Run this to log files in /var/task
+logFiles("/var/task");
 
 const emailClient = Client.initWithMiddleware({
   authProvider: {
