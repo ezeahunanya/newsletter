@@ -1,4 +1,5 @@
 import nunjucks from "nunjucks";
+import path from "path";
 import { getAccessToken } from "./getAccessToken";
 import { Client } from "@microsoft/microsoft-graph-client";
 
@@ -10,7 +11,7 @@ const emailClient = Client.initWithMiddleware({
 
 // Configure Nunjucks for rendering templates
 const configureNunjucks = () => {
-  const templatesPath = "/emailTemplates";
+  const templatesPath = path.resolve(process.cwd(), "emailTemplates");
   console.log(`Configuring Nunjucks with templates path: ${templatesPath}`);
   nunjucks.configure(templatesPath, { autoescape: true });
 };
@@ -23,7 +24,7 @@ export const sendEmailWithTemplate = async (
 ) => {
   console.log(`Rendering email template: ${templateName} for ${email}...`);
   configureNunjucks();
-  const emailHtml = nunjucks.render(`/emailTemplates/${templateName}.html`, context);
+  const emailHtml = nunjucks.render(`${templateName}.html`, context);
 
   console.log("Sending email via Outlook (Production)...");
   return await sendEmailViaOutlook(email, subject, emailHtml);
