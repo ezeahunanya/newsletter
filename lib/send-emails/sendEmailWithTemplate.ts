@@ -9,11 +9,11 @@ const emailClient = Client.initWithMiddleware({
 });
 
 // Configure Nunjucks for rendering templates
-//const configureNunjucks = () => {
-//  const templatesPath = "/emailTemplates";
-//  console.log(`Configuring Nunjucks with templates path: ${templatesPath}`);
-//  nunjucks.configure(templatesPath, { autoescape: true });
-//};
+const configureNunjucks = () => {
+  const templatesPath = "/emailTemplates";
+  console.log(`Configuring Nunjucks with templates path: ${templatesPath}`);
+  nunjucks.configure(templatesPath, { autoescape: true });
+};
 
 export const sendEmailWithTemplate = async (
   email: string,
@@ -22,7 +22,7 @@ export const sendEmailWithTemplate = async (
   subject: string,
 ) => {
   console.log(`Rendering email template: ${templateName} for ${email}...`);
-  //configureNunjucks();
+  configureNunjucks();
   const emailHtml = nunjucks.render(`/emailTemplates/${templateName}.html`, context);
 
   console.log("Sending email via Outlook (Production)...");
