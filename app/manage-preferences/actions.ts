@@ -134,10 +134,10 @@ export async function updatePreferences(formData: FormData): Promise<{
     const tokenQuery = `
     UPDATE ${process.env.TOKEN_TABLE_NAME}
     SET updated_at = NOW()
-    WHERE user_id = $2 AND token_type = 'preferences';
+    WHERE user_id = $1 AND token_type = 'preferences';
     `;
 
-    const tokenParams = [JSON.stringify(updatedPreferences), user_id];
+    const tokenParams = [user_id];
     await client.query(tokenQuery, tokenParams);
 
     // Commit transaction
