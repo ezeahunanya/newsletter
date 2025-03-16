@@ -25,11 +25,11 @@ export async function subscribeUser(
 
     const userId = await insertSubscriber(client, email);
     const { token, tokenHash } = await generateUniqueToken(client);
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24-hour expiration
+    const expiresAt = new Date(Date.now()); // + 24 * 60 * 60 * 1000); // 24-hour expiration
 
     await insertVerificationToken(client, userId, tokenHash, expiresAt);
 
-    const verificationUrl = `${process.env.FRONTEND_DOMAIN_URL}/verify-email?token=${token}`;
+    const verificationUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/${process.env.NEXT_PUBLIC_VERIFY_EMAIL_PATH}?token=${token}`;
     sendEmail(email, "verify", { verificationUrl });
 
     // Commit transaction
