@@ -1,6 +1,6 @@
 {
   "functions": {
-    "app/**": {
+    "app/**/actions.ts": {
       "includeFiles": "emailTemplates/**"
     }
   }
