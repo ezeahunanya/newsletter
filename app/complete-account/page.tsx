@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import CompleteAccountForm from "./completeAccountForm";
 import Alert from "../_components/ui/alert";
-import WarningAlertComponent from "../_components/ui/warningAlertComponent";
+//import WarningAlertComponent from "../_components/ui/warningAlertComponent";
 
 export const metadata: Metadata = {
   title: "Complete Account",
