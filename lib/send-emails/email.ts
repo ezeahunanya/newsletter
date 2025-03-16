@@ -1,7 +1,7 @@
 import { sendEmailWithTemplate } from "./sendEmailWithTemplate";
 
 export async function sendEmail(email: string, type: string, data: object) {
-  fetch("/api/send-email", {
+  fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/send-email`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
