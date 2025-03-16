@@ -1,8 +1,7 @@
 {
-    "functions": {
-      "api/**": {
-        "includeFiles": ["emailTemplates/**"]
-      }
+  "functions": {
+    "app/**": {
+      "includeFiles": "emailTemplates/**"
     }
   }
-  
+}
