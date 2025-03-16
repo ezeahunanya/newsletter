@@ -136,8 +136,8 @@ const generateAndStoreTokens = async (client: Client, userId: number) => {
   console.log("✅ Preferences token stored.");
 
   return {
-    accountCompletionUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}/${process.env.NEXT_PUBLIC_MANAGE_PREFERENCES_PATH}?token=${accountCompletionToken}`,
-    preferencesUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}/${process.env.NEXT_PUBLIC_COMPLETE_ACCOUNT_PATH}?token=${preferencesToken}`,
+    accountCompletionUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}/${process.env.NEXT_PUBLIC_COMPLETE_ACCOUNT_PATH}?token=${accountCompletionToken}`,
+    preferencesUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}/${process.env.NEXT_PUBLIC_MANAGE_PREFERENCES_PATH}?token=${preferencesToken}`,
   };
 };
 
