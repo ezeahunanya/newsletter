@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import CompleteAccountForm from "./completeAccountForm";
-import { verifyToken } from "./verifyToken";
 import Alert from "../_components/ui/alert";
 import WarningAlertComponent from "../_components/ui/warningAlertComponent";
 
@@ -20,7 +19,7 @@ export default async function CompleteAccountPage({
   if (!token)
     return <Alert type="error" message="Invalid request: Token is missing." />;
 
-  const result = await verifyToken(token);
+  //const result = await verifyToken(token);
 
   if (result.error) {
     return (
