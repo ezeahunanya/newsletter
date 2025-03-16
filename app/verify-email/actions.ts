@@ -45,7 +45,7 @@ export async function verifyEmail(
     const { accountCompletionUrl, preferencesUrl } =
       await generateAndStoreTokens(client, user_id);
 
-    sendEmail(email, "welcome", { accountCompletionUrl, preferencesUrl });
+    await sendEmail(email, "welcome", { accountCompletionUrl, preferencesUrl });
 
     // Commit transaction
     await client.query("COMMIT");
