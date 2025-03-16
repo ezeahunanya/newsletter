@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "app/**/actions.ts": {
-      "includeFiles": "emailTemplates/**"
-    }
-  }
-}
