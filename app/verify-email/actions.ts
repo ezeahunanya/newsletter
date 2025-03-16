@@ -91,7 +91,7 @@ export async function verifyEmail(
 const markEmailVerified = async (client: Client, userId: number) => {
   console.log("Marking email as verified...");
   await client.query(
-    `UPDATE ${process.env.SUBSCRIBERS_TABLE_NAME} SET email_verified = true WHERE id = $1;`,
+    `UPDATE ${process.env.SUBSCRIBERS_TABLE_NAME} SET status = 'subscribed', updated_at = NOW() WHERE id = $1;`,
     [userId],
   );
   console.log("✅ Email marked as verified.");
@@ -198,7 +198,7 @@ export async function regenerateToken(
     console.log("✅ Transaction committed successfully.");
 
     return {
-      success: false,
+      success: true,
       message: "A new link has been sent to your email.",
     };
   } catch (error: unknown) {

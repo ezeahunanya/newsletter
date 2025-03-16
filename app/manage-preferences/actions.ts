@@ -115,14 +115,14 @@ export async function updatePreferences(formData: FormData): Promise<{
         ? `
     UPDATE ${process.env.SUBSCRIBERS_TABLE_NAME}
     SET preferences = $1,
-    subscribed = true,
+    status = 'subscribed',
     unsubscribed_at = NULL
     WHERE id = $2;
     `
         : `
     UPDATE ${process.env.SUBSCRIBERS_TABLE_NAME}
     SET preferences = $1,
-    subscribed = false,
+    status = 'unsubscribed',
     unsubscribed_at = NOW()
     WHERE id = $2;
     `;
