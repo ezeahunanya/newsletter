@@ -78,8 +78,7 @@ export async function updatePreferences(formData: FormData): Promise<{
     };
   }
 
-  let preferences: preferencesType;
-  preferences = JSON.parse(preferencesString);
+  const preferences = JSON.parse(preferencesString) as preferencesType;
 
   const client = new Client(process.env.DATABASE_URL);
   await client.connect();

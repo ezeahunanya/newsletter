@@ -7,15 +7,10 @@ import Message from "../_components/ui/message";
 import { updatePreferences } from "./actions";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-const managePreferencesPath = process.env.NEXT_PUBLIC_MANAGE_PREFERENCES_PATH;
 
-if (!apiBaseUrl || !managePreferencesPath) {
-  throw new Error(
-    "API base URL or complete account path is not defined in environment variables.",
-  );
+if (!apiBaseUrl) {
+  throw new Error("API base URL is not defined in environment variables.");
 }
-
-const managePreferencesUrl = `${apiBaseUrl}${managePreferencesPath}`;
 
 const PREFERENCE_DESCRIPTIONS = {
   updates: "Receive valuable insights and ideas through new YouTube videos.",
