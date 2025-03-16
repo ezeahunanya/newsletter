@@ -21,16 +21,16 @@ export default async function CompleteAccountPage({
 
   //const result = await verifyToken(token);
 
-  if (result.error) {
-    return (
-      <WarningAlertComponent
-        token={token}
-        error={result.error}
-        origin="complete-account"
-      />
-    );
-  }
-
+  //if (result.error) {
+  //  return (
+  //    <WarningAlertComponent
+  //      token={token}
+  //      error={result.error}
+  //      origin="complete-account"
+  //    />
+  //  );
+  //}
+//
   return (
     <div>
       <CompleteAccountForm token={token} />
