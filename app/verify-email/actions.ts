@@ -118,7 +118,7 @@ const generateAndStoreTokens = async (client: Client, userId: number) => {
 
   await client.query(
     `INSERT INTO ${process.env.TOKEN_TABLE_NAME} (user_id, token_hash, token_type, expires_at, used, created_at, updated_at)
-     VALUES ($1, $2, 'account_completion', $3, false, NOW(), NOW());`,
+    VALUES ($1, $2, 'account_completion', $3, false, NOW(), NOW());`,
     [userId, accountCompletionHash, accountCompletionExpiresAt],
   );
   console.log("✅ Account completion token stored.");
@@ -130,7 +130,7 @@ const generateAndStoreTokens = async (client: Client, userId: number) => {
 
   await client.query(
     `INSERT INTO ${process.env.TOKEN_TABLE_NAME} (user_id, token_hash, encrypted_token, token_type, created_at, updated_at)
-     VALUES ($1, $2, $3, 'preferences', NOW(), NOW());`,
+    VALUES ($1, $2, $3, 'preferences', NOW(), NOW());`,
     [userId, preferencesHash, encryptedPreferencesToken],
   );
   console.log("✅ Preferences token stored.");
@@ -139,4 +139,109 @@ const generateAndStoreTokens = async (client: Client, userId: number) => {
     accountCompletionUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}/${process.env.NEXT_PUBLIC_MANAGE_PREFERENCES_PATH}?token=${accountCompletionToken}`,
     preferencesUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL}/${process.env.NEXT_PUBLIC_COMPLETE_ACCOUNT_PATH}?token=${preferencesToken}`,
   };
+};
+
+export async function regenerateToken(
+  token: string,
+  origin: string,
+): Promise<{ success: boolean; message: string }> {
+  if (!token || !origin) {
+    console.error("❌ Token and origin are required but not provided.");
+    return {
+      success: false,
+      message: "Token and origin are required.",
+    };
+  }
+
+  // Validate origin and map to token type
+  const tokenType = getTokenType(origin);
+  if (!tokenType) {
+    console.error(`❌ Invalid origin specified: ${origin}`);
+    return {
+      success: false,
+      message: "Invalid origin specified.",
+    };
+  }
+
+  const client = new Client(process.env.DATABASE_URL);
+  await client.connect();
+
+  try {
+    // Start transaction
+    await client.query("BEGIN");
+    console.log("🔄 Transaction started.");
+
+    const { user_id, email } = await validateToken(
+      client,
+      token,
+      tokenType,
+      process.env.SUBSCRIBERS_TABLE_NAME,
+      { allowExpired: true },
+    );
+
+    console.log(
+      `✅ Token validation successful for user ID: ${user_id}, email: ${email}`,
+    );
+
+    console.log(`Generating new ${tokenType} token...`);
+    const { token: newToken, tokenHash: newTokenHash } =
+      await generateUniqueToken(client);
+
+    await updateTokenInDatabase(client, user_id, newTokenHash, tokenType);
+
+    const linkUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/${origin}?token=${newToken}`;
+
+    sendEmail(email, "regenerate", { linkUrl, origin });
+
+    // Commit transaction
+    await client.query("COMMIT");
+    console.log("✅ Transaction committed successfully.");
+
+    return {
+      success: false,
+      message: "A new link has been sent to your email.",
+    };
+  } catch (error: unknown) {
+    // Rollback on failure
+    await client.query("ROLLBACK");
+    console.error("❌ Transaction failed, rolling back changes:", error);
+    return {
+      success: false,
+      message: "Internal Server Error",
+    };
+  }
+}
+
+type Origin = "verify-email" | "complete-account";
+type TokenType = "email_verification" | "account_completion";
+
+const getTokenType = (origin: string): TokenType | null => {
+  const tokenTypeMap: Record<Origin, TokenType> = {
+    "verify-email": "email_verification",
+    "complete-account": "account_completion",
+  };
+
+  if (origin in tokenTypeMap) {
+    return tokenTypeMap[origin as Origin];
+  }
+
+  return null;
+};
+
+// Update token in the database
+const updateTokenInDatabase = async (
+  client: Client,
+  user_id: number,
+  tokenHash: string,
+  tokenType: string,
+) => {
+  console.log(`Updating token in database for user ID: ${user_id}`);
+  const query = `
+    UPDATE ${process.env.TOKEN_TABLE_NAME}
+    SET token_hash = $1, expires_at = NOW() + interval '24 hours', 
+        used = false, updated_at = NOW()
+    WHERE user_id = $2 AND token_type = $3
+  `;
+  await client.query(query, [tokenHash, user_id, tokenType]);
+  console.log("✅ Token updated successfully in database.");
 };

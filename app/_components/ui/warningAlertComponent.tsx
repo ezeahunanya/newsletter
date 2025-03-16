@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Alert from "./alert";
 import Button from "./button";
-import { regenerateToken } from "../utils/regenerateToken";
 import Message from "./message";
+import { regenerateToken } from "@/app/verify-email/actions";
 
 interface WarningAlertComponentProps {
   token: string;
@@ -26,32 +26,17 @@ export default function WarningAlertComponent({
     setIsSuccess(null);
     setResponseMessage("");
 
-    try {
-      const response = await regenerateToken(token, origin);
-      const responseData = await response.json();
+    const response = await regenerateToken(token, origin);
+    setIsSuccess(response.success);
+    setResponseMessage(
+      response.message || "A new link has been sent to your email.",
+    );
 
-      if (response.ok) {
-        setIsSuccess(true);
-        setResponseMessage(
-          responseData.message || "A new link has been sent to your email.",
-        );
-      } else {
-        setIsSuccess(false);
-        setResponseMessage(
-          responseData.error || "Failed to regenerate the token.",
-        );
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      setIsSuccess(false);
-      setResponseMessage("An error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-      setTimeout(() => {
-        setIsSuccess(null);
-        setResponseMessage("");
-      }, 5000);
-    }
+    setIsLoading(false);
+    setTimeout(() => {
+      setIsSuccess(null);
+      setResponseMessage("");
+    }, 5000);
   };
 
   if (error) {
