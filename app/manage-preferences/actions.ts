@@ -138,7 +138,7 @@ export async function updatePreferences(formData: FormData): Promise<{
     `;
 
     const tokenParams = [JSON.stringify(updatedPreferences), user_id];
-    await client.query(query, tokenParams);
+    await client.query(tokenQuery, tokenParams);
 
     // Commit transaction
     await client.query("COMMIT");
