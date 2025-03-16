@@ -2,6 +2,7 @@ import nunjucks from "nunjucks";
 import path from "path";
 import { getAccessToken } from "./getAccessToken";
 import { Client } from "@microsoft/microsoft-graph-client";
+import fs from "fs";//
 
 const emailClient = Client.initWithMiddleware({
   authProvider: {
@@ -12,7 +13,14 @@ const emailClient = Client.initWithMiddleware({
 // Configure Nunjucks for rendering templates
 const configureNunjucks = () => {
   const templatesPath = path.resolve(process.cwd(), "emailTemplates");
+  console.log(`Configuring Nunjucks with templates path: ${templatesPath}`);//
   nunjucks.configure(templatesPath, { autoescape: true });
+  try {
+    const files = fs.readdirSync(templatesPath);
+    console.log("✅ Found templates in production:", files);
+  } catch (err) {
+    console.error("❌ Could not read template directory:", err);
+  }
 };
 
 export const sendEmailWithTemplate = async (
