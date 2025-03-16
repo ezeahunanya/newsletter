@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import Button from "../_components/ui/button";
 import Message from "../_components/ui/message";
+import { updatePreferences } from "./actions";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 const managePreferencesPath = process.env.NEXT_PUBLIC_MANAGE_PREFERENCES_PATH;
@@ -25,8 +26,7 @@ const PREFERENCE_DESCRIPTIONS = {
 
 interface PreferencesFormProps {
   initialPreferences: {
-    promotions: boolean;
-    updates: boolean;
+    [key: string]: boolean;
   };
   token: string;
 }
@@ -54,33 +54,20 @@ export default function PreferencesForm({
     setIsSuccess(null);
     setResponseMessage("");
 
-    try {
-      const response = await fetch(managePreferencesUrl, {
-        method: "PUT",
-        headers: { "x-token": token, "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+    const formData = new FormData();
+    formData.append("token", token);
+    formData.append("preferences", String(data));
 
-      const responseData = await response.json();
+    const response = await updatePreferences(formData);
 
-      if (response.ok) {
-        setIsSuccess(true);
-        setResponseMessage(responseData.message);
-      } else {
-        setIsSuccess(false);
-        setResponseMessage(responseData.error);
-      }
-    } catch (error) {
-      console.error(error);
-      setIsSuccess(false);
-      setResponseMessage("An error occurred while saving preferences.");
-    } finally {
-      setIsLoading(false); // End loading state
-      setTimeout(() => {
-        setIsSuccess(null);
-        setResponseMessage("");
-      }, 2000);
-    }
+    setIsSuccess(response.success);
+    setResponseMessage(response.message);
+
+    setIsLoading(false); // End loading state
+    setTimeout(() => {
+      setIsSuccess(null);
+      setResponseMessage("");
+    }, 2000);
   };
 
   const handleUnsubscribeAll = () => {

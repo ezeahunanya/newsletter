@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 import PreferencesForm from "./preferencesForm";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { getPreferences } from "./getPreference";
 import Alert from "../_components/ui/alert";
+import { getPreferences } from "./actions";
 
 export const metadata: Metadata = {
   title: "Manage Preferences",
@@ -22,8 +22,7 @@ export default async function PreferencesPage({
   }
 
   const preferencesData = await getPreferences(token);
-
-  if (preferencesData.error) {
+  if (!preferencesData.success) {
     return (
       <div className="rounded-md bg-yellow-50 p-4">
         <div className="flex">
@@ -35,7 +34,7 @@ export default async function PreferencesPage({
           </div>
           <div className="ml-3">
             <h3 className="text-sm font-medium text-yellow-800">
-              {preferencesData.error}
+              {preferencesData.message}
             </h3>
           </div>
         </div>
@@ -43,8 +42,7 @@ export default async function PreferencesPage({
     );
   }
 
-  const initialPreferences = preferencesData?.data?.preferences;
-
+  const initialPreferences = preferencesData.preferences!;
   return (
     <div>
       <PreferencesForm initialPreferences={initialPreferences} token={token} />
