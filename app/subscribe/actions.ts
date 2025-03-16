@@ -30,7 +30,7 @@ export async function subscribeUser(
     await insertVerificationToken(client, userId, tokenHash, expiresAt);
 
     const verificationUrl = `${process.env.FRONTEND_DOMAIN_URL}/verify-email?token=${token}`;
-    sendVerificationEmail(email, verificationUrl).catch(console.error);
+    await sendVerificationEmail(email, verificationUrl)//.catch(console.error);
 
     // Commit transaction
     await client.query("COMMIT");
