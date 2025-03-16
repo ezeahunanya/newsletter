@@ -1,5 +1,19 @@
 import { sendEmailWithTemplate } from "./sendEmailWithTemplate";
 
+export async function sendEmail(email: string, type: string, data: object) {
+  fetch("/api/send-email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      type,
+      data,
+    }),
+  });
+}
+
 // Verification email
 export const sendVerificationEmail = async (
   email: string,

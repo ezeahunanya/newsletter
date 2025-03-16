@@ -26,17 +26,3 @@ export async function POST(req: Request) {
     console.error("❌ Error sending email:", error);
   }
 }
-
-export async function sendEmail(email: string, type: string, data: object) {
-  fetch("/api/send-email", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email,
-      type,
-      data,
-    }),
-  });
-}
