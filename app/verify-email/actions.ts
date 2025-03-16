@@ -191,7 +191,7 @@ export async function regenerateToken(
 
     const linkUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/${origin}?token=${newToken}`;
 
-    sendEmail(email, "regenerate", { linkUrl, origin });
+    await sendEmail(email, "regenerate", { linkUrl, origin });
 
     // Commit transaction
     await client.query("COMMIT");
