@@ -51,7 +51,7 @@ export default function PreferencesForm({
 
     const formData = new FormData();
     formData.append("token", token);
-    formData.append("preferences", String(data));
+    formData.append("preferencesString", JSON.stringify(data));
 
     const response = await updatePreferences(formData);
 
