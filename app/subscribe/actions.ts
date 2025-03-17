@@ -2,7 +2,6 @@
 
 import { Client } from "@neondatabase/serverless";
 import { generateUniqueToken } from "@/lib/generateUniqueToken";
-import { sendEmail } from "@/lib/send-emails/email";
 import { sendVerificationEmail } from "@/lib/send-emails/email";
 
 export async function subscribeUser(
