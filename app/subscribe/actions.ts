@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 
 export async function subscribeUser(
   formData: FormData,
-): Promise<{ success: boolean; message: string } | undefined> {
+): Promise<{ success: boolean; message: string }> {
   const email = formData.get("email") as string;
   if (!email) {
     return {
@@ -39,10 +39,10 @@ export async function subscribeUser(
     console.log("✅ Subscription transaction committed successfully.");
 
     redirectPath = process.env.NEXT_PUBLIC_COMPLETE_ACCOUNT_PATH!;
-    //return {
-    //  success: true,
-    //  message: "Check your email to confirm your subscription",
-    //};
+    return {
+      success: true,
+      message: "Check your email to confirm your subscription",
+    };
   } catch (error: unknown) {
     await client.query("ROLLBACK");
     console.error("❌ Transaction failed, rolling back changes:", error);
