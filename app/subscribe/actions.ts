@@ -3,6 +3,7 @@
 import { Client } from "@neondatabase/serverless";
 import { generateUniqueToken } from "@/lib/generateUniqueToken";
 import { sendVerificationEmail } from "@/lib/send-emails/email";
+import { redirect } from "next/navigation";
 
 export async function subscribeUser(
   formData: FormData,
@@ -36,10 +37,11 @@ export async function subscribeUser(
     await client.query("COMMIT");
     console.log("✅ Subscription transaction committed successfully.");
 
-    return {
-      success: true,
-      message: "Check your email to confirm your subscription",
-    };
+    redirect(`${process.env.NEXT_PUBLIC_COMPLETE_ACCOUNT_PATH}`);
+    //return {
+    //  success: true,
+    //  message: "Check your email to confirm your subscription",
+    //};
   } catch (error: unknown) {
     await client.query("ROLLBACK");
     console.error("❌ Transaction failed, rolling back changes:", error);
