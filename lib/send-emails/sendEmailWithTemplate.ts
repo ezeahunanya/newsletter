@@ -11,7 +11,10 @@ const emailClient = Client.initWithMiddleware({
 
 // Configure Nunjucks for rendering templates
 const configureNunjucks = () => {
-  const templatesPath = path.resolve(process.cwd(), "lib/send-emails/emailTemplates");
+  const templatesPath = path.resolve(
+    process.cwd(),
+    "lib/send-emails/emailTemplates",
+  );
   nunjucks.configure(templatesPath, { autoescape: true });
 };
 
@@ -62,9 +65,9 @@ const sendEmailViaOutlook = async (
 
     // Send email using the Graph API
     await emailClient.api(`/users/${senderEmail}/sendMail`).post(emailParams);
-    console.log("✅ Email sent successfully!");
+    console.log(`✅ Email sent successfully! Email: ${email}`);
   } catch (error) {
-    console.error("❌ Error sending email via Outlook:", error);
+    console.error(`❌ Error sending email to ${email} via Outlook:`, error);
     throw new Error("Failed to send email via Outlook API");
   }
 };

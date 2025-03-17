@@ -3,6 +3,7 @@
 import { Client } from "@neondatabase/serverless";
 import { generateUniqueToken } from "@/lib/generateUniqueToken";
 import { sendEmail } from "@/lib/send-emails/email";
+import { sendVerificationEmail } from "@/lib/send-emails/email";
 
 export async function subscribeUser(
   formData: FormData,
@@ -31,6 +32,7 @@ export async function subscribeUser(
 
     const verificationUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/${process.env.NEXT_PUBLIC_VERIFY_EMAIL_PATH}?token=${token}`;
     await sendEmail(email, "verify", { verificationUrl });
+    await sendVerificationEmail(email, verificationUrl);
 
     // Commit transaction
     await client.query("COMMIT");
