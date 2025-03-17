@@ -31,7 +31,6 @@ export async function subscribeUser(
     await insertVerificationToken(client, userId, tokenHash, expiresAt);
 
     const verificationUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/${process.env.NEXT_PUBLIC_VERIFY_EMAIL_PATH}?token=${token}`;
-    await sendEmail(email, "verify", { verificationUrl });
     await sendVerificationEmail(email, verificationUrl);
 
     // Commit transaction

@@ -2,7 +2,10 @@
 
 import { Client } from "@neondatabase/serverless";
 import { generateUniqueToken } from "@/lib/generateUniqueToken";
-import { sendEmail } from "@/lib/send-emails/email";
+import {
+  sendRegeneratedTokenEmail,
+  sendWelcomeEmail,
+} from "@/lib/send-emails/email";
 import { validateToken } from "@/lib/validateToken";
 import { hashToken } from "@/lib/utils";
 import { encryptToken } from "@/lib/encryption";
@@ -45,7 +48,7 @@ export async function verifyEmail(
     const { accountCompletionUrl, preferencesUrl } =
       await generateAndStoreTokens(client, user_id);
 
-    await sendEmail(email, "welcome", { accountCompletionUrl, preferencesUrl });
+    await sendWelcomeEmail(email, accountCompletionUrl, preferencesUrl);
 
     // Commit transaction
     await client.query("COMMIT");
@@ -191,7 +194,7 @@ export async function regenerateToken(
 
     const linkUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/${origin}?token=${newToken}`;
 
-    await sendEmail(email, "regenerate", { linkUrl, origin });
+    await sendRegeneratedTokenEmail(email, linkUrl, origin);
 
     // Commit transaction
     await client.query("COMMIT");
