@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 
 export async function subscribeUser(
   formData: FormData,
-): Promise<{ success: boolean; message: string }> {
+): Promise<{ success: boolean; message: string } | undefined> {
   const email = formData.get("email") as string;
   if (!email) {
     return {
@@ -16,6 +16,7 @@ export async function subscribeUser(
     };
   }
 
+  let redirectPath: string | null = null;
   const client = new Client(process.env.DATABASE_URL);
   await client.connect();
 
@@ -37,7 +38,7 @@ export async function subscribeUser(
     await client.query("COMMIT");
     console.log("✅ Subscription transaction committed successfully.");
 
-    redirect(`${process.env.NEXT_PUBLIC_COMPLETE_ACCOUNT_PATH}`);
+    redirectPath = process.env.NEXT_PUBLIC_COMPLETE_ACCOUNT_PATH!;
     //return {
     //  success: true,
     //  message: "Check your email to confirm your subscription",
@@ -59,6 +60,9 @@ export async function subscribeUser(
     }
   } finally {
     await client.end();
+    if (redirectPath) {
+      redirect(redirectPath);
+    }
   }
 }
 
